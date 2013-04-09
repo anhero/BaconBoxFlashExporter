@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
+		<s:VGroup width="100%" height="100%">
+			<s:Label text="Symbols"></s:Label>
+			<s:List width="100%" height="100%"></s:List>
+		</s:VGroup>
+
+		<s:Button label="Swap"></s:Button>
+
+		<s:VGroup width="100%" height="100%">
+			<s:Label text="Textures"></s:Label>
+			<s:List width="100%" height="100%">
+				<s:dataProvider>
+					<s:ArrayCollection>
+					</s:ArrayCollection>
+				</s:dataProvider>
+			</s:List>
+		</s:VGroup>
+</s:VGroup>
