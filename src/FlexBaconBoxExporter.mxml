@@ -1,45 +1,58 @@
 <?xml version="1.0"?>
-
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:BB="BaconBox.*" width="800" height="600" >
-	<fx:Style source="./themes/spark_graphite/spark_graphite.css"/>
+	<fx:Style source="./spark_graphite.css"/>
+
+	<fx:Script><![CDATA[
+		import mx.controls.Alert;
+
+		private function onClick(event:MouseEvent):void {
+			if(event.target.id == "loadButton"){
+			}
+			else if(event.target.id == "playSymbolButton"){
+
+			}
+			else if(event.target.id == "stopSymbolButton"){
+			}
+		}
+		]]></fx:Script>
+
 	<s:VGroup width="100%" height="100%"  paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
 		<s:HGroup>
-			<s:Button label="Load SWF/JSON"></s:Button>
+			<s:Button id="loadButton" label="Load SWF/JSON" click="onClick(event)" />
 		</s:HGroup>
 		<s:HGroup width="100%" height="100%">
 			<s:VGroup width="100%" height="100%">
 				<s:VGroup width="100%" height="100%">
-					<s:Label text="Texture atlas"></s:Label>
+					<s:Label text="Texture atlas" />
 					<s:List width="100%" height="100%"></s:List>
 				</s:VGroup>
 				<s:VGroup>
 					<s:HGroup width="100%">
-						<s:Label text="Texture name"></s:Label>
-						<s:TextInput width="100%"></s:TextInput>
+						<s:Label text="Texture name" />
+						<s:TextInput width="100%" />
 					</s:HGroup>
 
 				<s:HGroup>
-					<s:Label text="Scale"></s:Label>
-					<s:TextInput widthInChars="4"></s:TextInput>
-					<s:Label text="Width"></s:Label>
-					<s:TextInput widthInChars="4"></s:TextInput>
-					<s:Label text="Height"></s:Label>
-					<s:TextInput widthInChars="4"></s:TextInput>
+					<s:Label text="Scale" />
+					<s:TextInput id="scaleInput" widthInChars="4" />
+					<s:Label text="Width" />
+					<s:TextInput id="widthInput" widthInChars="4" />
+					<s:Label text="Height" />
+					<s:TextInput id="heighInput" widthInChars="4" />
 				</s:HGroup>
 				</s:VGroup>
 				<s:VGroup width="100%" height="100%">
-					<s:Label text="Preview"></s:Label>
+					<s:Label text="Preview" />
 					<s:HGroup width="100%" height="100%">
 					<s:VGroup>
-					<s:Button label=">"></s:Button>
-					<s:Button label="x"></s:Button>
+					<s:Button id="playSymbolButton" click="onClick(event)" label="►" />
+					<s:Button id="stopSymbolButton" label="￭" click="onClick(event)" />
 					</s:VGroup>
-					<BB:SymbolPreviewer></BB:SymbolPreviewer>
-					<!--<s:List></s:List>-->
+					<BB:SymbolPreviewer  width="100%" height="100%" />
 					</s:HGroup>
 				</s:VGroup>
 			</s:VGroup>
-			<BB:VSwappingList width="100%" height="100%"></BB:VSwappingList>
+			<BB:VSwappingList firstLabel="Symbols" secondLabel="Textures" width="100%" height="100%"></BB:VSwappingList>
 		</s:HGroup>
 	</s:VGroup>
 </s:WindowedApplication>
