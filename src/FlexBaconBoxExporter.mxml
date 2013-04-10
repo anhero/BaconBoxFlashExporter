@@ -3,17 +3,49 @@
 	<fx:Style source="./spark_graphite.css"/>
 
 	<fx:Script><![CDATA[
+		import BaconBox.TextureAtlas;
+
 		import mx.controls.Alert;
 
+		import spark.events.IndexChangeEvent;
+
 		private function onClick(event:MouseEvent):void {
-			if(event.target.id == "loadButton"){
+			if (event.target.id == "loadButton") {
+				loadTextureAtlas();
 			}
-			else if(event.target.id == "playSymbolButton"){
+			else if (event.target.id == "playSymbolButton") {
 
 			}
-			else if(event.target.id == "stopSymbolButton"){
+			else if (event.target.id == "stopSymbolButton") {
 			}
 		}
+
+		private function loadTextureAtlas() {
+			var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
+			var textureAtlas:TextureAtlas = new TextureAtlas();
+			var filePicker:File;
+			if (so.size != 0) {
+				filePicker = new File(so.data.lastLoadDirectory);
+
+			}
+			if (filePicker == null || !filePicker.exists) {
+				filePicker = File.documentsDirectory;
+			}
+
+			var filter:FileFilter = new FileFilter("JSON, SWF/SWC", "*.swf;*.swc;*.json");
+			filePicker.browseForOpenMultiple("Select files", [filter]);
+			filePicker.addEventListener(FileListEvent.SELECT_MULTIPLE, function (event):void {
+				for each (var file:File in event.files) {
+					var textureAtlas:TextureAtlas = new TextureAtlas();
+					textureAtlas.loadFromFile(file);
+					textureAtlasList.dataProvider.addItem(textureAtlas);
+				}
+			});
+
+
+		}
+
+
 		]]></fx:Script>
 
 	<s:VGroup width="100%" height="100%"  paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
@@ -24,21 +56,39 @@
 			<s:VGroup width="100%" height="100%">
 				<s:VGroup width="100%" height="100%">
 					<s:Label text="Texture atlas" />
-					<s:List width="100%" height="100%"></s:List>
+					<s:List  id="textureAtlasList" height="100%" width="100%">
+						<s:itemRenderer>
+							<fx:Component>
+							  <s:ItemRenderer>
+								  <s:HGroup paddingLeft="3" paddingRight="3" paddingTop="5" paddingBottom="5" width="100%">
+									  <s:Label text="{data.name}" width="100"/>
+									  <s:Label text="|"/>
+									  <s:Spacer width="100%" />
+									  <s:Label text="{data.file.name}"/>
+								  </s:HGroup>
+							  </s:ItemRenderer>
+							</fx:Component>
+						</s:itemRenderer>
+						<s:dataProvider>
+							<s:ArrayCollection>
+
+							</s:ArrayCollection>
+						</s:dataProvider>
+					</s:List>
 				</s:VGroup>
 				<s:VGroup>
 					<s:HGroup width="100%">
 						<s:Label text="Texture name" />
-						<s:TextInput width="100%" />
+						<s:TextInput width="100%" text="{textureAtlasList.selectedItem.name}" change="textureAtlasList.selectedItem.name = event.target.text"/>
 					</s:HGroup>
 
 				<s:HGroup>
 					<s:Label text="Scale" />
-					<s:TextInput id="scaleInput" widthInChars="4" />
+					<s:TextInput id="scaleInput" widthInChars="4" text="{textureAtlasList.selectedItem.scale}" change="textureAtlasList.selectedItem.scale = event.target.text" />
 					<s:Label text="Width" />
-					<s:TextInput id="widthInput" widthInChars="4" />
+					<s:TextInput id="widthInput" widthInChars="4" text="{textureAtlasList.selectedItem.width}" change="textureAtlasList.selectedItem.width = event.target.text" />
 					<s:Label text="Height" />
-					<s:TextInput id="heighInput" widthInChars="4" />
+					<s:TextInput id="heighInput" widthInChars="4" text="{textureAtlasList.selectedItem.height}" change="textureAtlasList.selectedItem.height = event.target.text" />
 				</s:HGroup>
 				</s:VGroup>
 				<s:VGroup width="100%" height="100%">
