@@ -4,6 +4,7 @@
 
 	<fx:Script><![CDATA[
 		import BaconBox.TextureAtlas;
+		import BaconBox.VSwappingSWFElementRenderer;
 
 		import mx.controls.Alert;
 
@@ -14,7 +15,7 @@
 				loadTextureAtlas();
 			}
 			else if (event.target.id == "playSymbolButton") {
-
+				trace("shit");
 			}
 			else if (event.target.id == "stopSymbolButton") {
 			}
@@ -40,12 +41,29 @@
 					textureAtlas.loadFromFile(file);
 					textureAtlasList.dataProvider.addItem(textureAtlas);
 				}
+				var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
+				so.data.lastLoadDirectory = event.files[0].parent.nativePath;
 			});
 
 
 		}
 
 
+		private function textureAtlasList_changeHandler(event:IndexChangeEvent):void {
+			var selectedItem:Object = event.target.selectedItem;
+			elementVSwappingList.clear();
+			for (var key:String in selectedItem.symbolHash.internalDictionary){
+				elementVSwappingList.firstCollection.addItem(selectedItem.symbolHash.getValue(key));
+			}
+			for (var key:String in selectedItem.textureHash.internalDictionary){
+				elementVSwappingList.secondList.dataProvider.addItem(selectedItem.textureHash.getValue(key));
+			}
+		}
+
+		private function initializeSwappingList():void{
+			elementVSwappingList.firstList.itemRenderer = new ClassFactory(VSwappingSWFElementRenderer);
+			elementVSwappingList.secondList.itemRenderer = new ClassFactory(VSwappingSWFElementRenderer)
+		}
 		]]></fx:Script>
 
 	<s:VGroup width="100%" height="100%"  paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
@@ -56,7 +74,7 @@
 			<s:VGroup width="100%" height="100%">
 				<s:VGroup width="100%" height="100%">
 					<s:Label text="Texture atlas" />
-					<s:List  id="textureAtlasList" height="100%" width="100%">
+					<s:List  id="textureAtlasList" height="100%" width="100%" change="textureAtlasList_changeHandler(event)">
 						<s:itemRenderer>
 							<fx:Component>
 							  <s:ItemRenderer>
@@ -64,7 +82,7 @@
 									  <s:Label text="{data.name}" width="100"/>
 									  <s:Label text="|"/>
 									  <s:Spacer width="100%" />
-									  <s:Label text="{data.file.name}"/>
+									  <s:Label text="{data.fileName}"/>
 								  </s:HGroup>
 							  </s:ItemRenderer>
 							</fx:Component>
@@ -102,7 +120,9 @@
 					</s:HGroup>
 				</s:VGroup>
 			</s:VGroup>
-			<BB:VSwappingList firstLabel="Symbols" secondLabel="Textures" width="100%" height="100%"></BB:VSwappingList>
+			<BB:VSwappingList initialize="initializeSwappingList()" id="elementVSwappingList" firstLabel="Symbols" secondLabel="Textures" width="100%" height="100%">
+
+			</BB:VSwappingList>
 		</s:HGroup>
 	</s:VGroup>
 </s:WindowedApplication>

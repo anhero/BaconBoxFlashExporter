@@ -3,12 +3,16 @@
 <fx:Declarations>
 	<fx:String id="firstLabel">First</fx:String>
 	<fx:String id="secondLabel">Second</fx:String>
-
+	<!--<fx:Object id="firstItemRenderer"></fx:Object>-->
+	<!--<fx:Object id="secondItemRenderer"></fx:Object>-->
 </fx:Declarations>
 		<fx:Script><![CDATA[
+			import mx.controls.listClasses.ListItemRenderer;
+
 			import spark.collections.Sort;
 			import spark.components.supportClasses.ItemRenderer;
 			import spark.events.IndexChangeEvent;
+
 
 			private function swapSelected(source:List, dest:List):void {
 				for each(var index in source.selectedIndices) {
@@ -47,10 +51,15 @@
 				}
 
 			}
+
+			public function clear():void{
+				firstList.dataProvider = new ArrayCollection();
+				secondList.dataProvider = new ArrayCollection();
+			}
 			]]></fx:Script>
 		<s:VGroup width="100%" height="100%">
 			<s:Label text="{firstLabel}"></s:Label>
-			<s:List id="firstList"  change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
+			<s:List id="firstList" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
 				<s:dataProvider>
 				   <s:ArrayCollection id="firstCollection">
 
