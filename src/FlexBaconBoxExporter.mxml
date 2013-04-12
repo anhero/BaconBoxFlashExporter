@@ -42,10 +42,10 @@
 			filePicker.browseForDirectory("Select an export folder");
 			filePicker.addEventListener(Event.SELECT, function(event:Event):void {
 				for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider){
-					textureAtlas.export(filePicker);
+					textureAtlas.export(filePicker)
 				}
 				so.data.lastExportDirectory = filePicker.nativePath;
-				Alert.show("Export completed");
+				Alert.show("Export completed!");
 			});
 		}
 

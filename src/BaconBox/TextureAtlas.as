@@ -6,6 +6,9 @@
  * To change this template use File | Settings | File Templates.
  */
 package BaconBox {
+import BaconBox.TexturePacker.TextureInfo;
+import BaconBox.TexturePacker.TexturePacker;
+
 import flash.display.Loader;
 import flash.display.MovieClip;
 import flash.display.Sprite;
@@ -98,7 +101,6 @@ public class TextureAtlas extends EventDispatcher {
 					var classNames = _appDomain.getQualifiedDefinitionNames();
 					for each(var className:String in classNames){
 						pushClassDef(_appDomain.getDefinition(className));
-
 					}
 				});
 	}
@@ -113,17 +115,49 @@ public class TextureAtlas extends EventDispatcher {
 		if(shortClassName != "EntityHolderMovieClip" && shortClassName != "EntityHolderTextField" ){
 			if(object is MovieClip || object is Sprite){
 				if(_symbolHash.isEmpty() || _textureHash.contains(className)){
-					_textureHash.setValue(className, new ObjectProxy({className:className, shortClassName:shortClassName, classDef:classDef}));
+					_textureHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef)));
 				}
 				else if(_symbolHash.contains(className)){
-					_symbolHash.setValue(className, new ObjectProxy({className:className, shortClassName:shortClassName, classDef:classDef}));
+					_symbolHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef)));
 				}
 			}
 		}
 	}
 
 	public function export(exportPath:File):void {
+		var texturePacker:TexturePacker = new TexturePacker(name, width, height);
+		var textures:Vector.<TextureInfo> = new Vector.<TextureInfo>;
+		for each (var element:Object in textureHash.internalDictionary){
+			var textureInfo = element.getTextureInfo(_scale);
+			textures.push(textureInfo);
+		}
+		texturePacker.packTextures(textures);
+		texturePacker.savePNG(exportPath);
 
+		saveXML(exportPath, texturePacker);
+	}
+
+	public function saveXML(exportPath:File, texturePacker:TexturePacker):void{
+		var textureSheetXML = <TextureSheet></TextureSheet>;
+		var texturesXML:XML = <Symbols></Symbols>;
+		var symbolsXML:XML =<Textures></Textures>;
+		textureSheetXML.appendChild(texturesXML);
+		textureSheetXML.appendChild(symbolsXML);
+
+		var subtexturesXML:Vector.<XML> = texturePacker.getXMLData();
+		for each (var subtextureXML:XML in subtexturesXML){
+			texturesXML.appendChild(subtextureXML);
+		}
+
+		for each (var element:Object in symbolHash.internalDictionary){
+			symbolsXML.appendChild(element.getSymbolXML())
+		}
+
+
+		var fs:FileStream = new FileStream();
+		fs.open(exportPath.resolvePath("./" + _name + ".xml"), FileMode.WRITE);
+		fs.writeUTFBytes(textureSheetXML);
+		fs.close();
 	}
 
 	public function get name():String {
