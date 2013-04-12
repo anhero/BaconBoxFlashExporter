@@ -7,6 +7,7 @@
 		import BaconBox.VSwappingSWFElementRenderer;
 
 		import mx.controls.Alert;
+		import mx.graphics.shaderClasses.ColorBurnShader;
 
 		import spark.events.IndexChangeEvent;
 
@@ -15,17 +16,44 @@
 				loadTextureAtlas();
 			}
 			else if (event.target.id == "playSymbolButton") {
-				trace("shit");
+				symbolPreviewer.play();
 			}
 			else if (event.target.id == "stopSymbolButton") {
+				symbolPreviewer.stop();
 			}
+			else if (event.target.id == "swapColorButton") {
+				symbolPreviewer.swapColor();
+			}
+			else if (event.target.id == "exportButton") {
+				exportTextureAtlas();
+			}
+		}
+
+		private function exportTextureAtlas():void{
+			var so:SharedObject = SharedObject.getLocal("lastExportDirectory");
+			var filePicker:File;
+			if (so.size != 0 && so.data.lastExportDirectory != undefined) {
+				filePicker = new File(so.data.lastExportDirectory);
+
+			}
+			if (filePicker == null || !filePicker.exists) {
+				filePicker = File.documentsDirectory;
+			}
+			filePicker.browseForDirectory("Select an export folder");
+			filePicker.addEventListener(Event.SELECT, function(event:Event):void {
+				for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider){
+					textureAtlas.export(filePicker);
+				}
+				so.data.lastExportDirectory = filePicker.nativePath;
+				Alert.show("Export completed");
+			});
 		}
 
 		private function loadTextureAtlas() {
 			var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
 			var textureAtlas:TextureAtlas = new TextureAtlas();
 			var filePicker:File;
-			if (so.size != 0) {
+			if (so.size != 0 && so.data.lastLoadDirectory != "") {
 				filePicker = new File(so.data.lastLoadDirectory);
 
 			}
@@ -37,34 +65,22 @@
 			filePicker.browseForOpenMultiple("Select files", [filter]);
 			filePicker.addEventListener(FileListEvent.SELECT_MULTIPLE, function (event):void {
 				for each (var file:File in event.files) {
-					var textureAtlas:TextureAtlas = new TextureAtlas();
-					textureAtlas.loadFromFile(file);
-					textureAtlasList.dataProvider.addItem(textureAtlas);
+					var textureAtlasArray:Array = TextureAtlas.loadFromFile(file);
+					for each(var textureAtlas:TextureAtlas in textureAtlasArray){
+						textureAtlasList.dataProvider.addItem(textureAtlas);
+					}
 				}
 				var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
 				so.data.lastLoadDirectory = event.files[0].parent.nativePath;
 			});
-
-
 		}
-
 
 		private function textureAtlasList_changeHandler(event:IndexChangeEvent):void {
-			var selectedItem:Object = event.target.selectedItem;
-			elementVSwappingList.clear();
-			for (var key:String in selectedItem.symbolHash.internalDictionary){
-				elementVSwappingList.firstCollection.addItem(selectedItem.symbolHash.getValue(key));
-			}
-			for (var key:String in selectedItem.textureHash.internalDictionary){
-				elementVSwappingList.secondList.dataProvider.addItem(selectedItem.textureHash.getValue(key));
-			}
+			elementVSwappingList.selectedTextureAtlas = event.target.selectedItem;
 		}
+		]]>
 
-		private function initializeSwappingList():void{
-			elementVSwappingList.firstList.itemRenderer = new ClassFactory(VSwappingSWFElementRenderer);
-			elementVSwappingList.secondList.itemRenderer = new ClassFactory(VSwappingSWFElementRenderer)
-		}
-		]]></fx:Script>
+	</fx:Script>
 
 	<s:VGroup width="100%" height="100%"  paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
 		<s:HGroup>
@@ -113,16 +129,21 @@
 					<s:Label text="Preview" />
 					<s:HGroup width="100%" height="100%">
 					<s:VGroup>
-					<s:Button id="playSymbolButton" click="onClick(event)" label="►" />
-					<s:Button id="stopSymbolButton" label="￭" click="onClick(event)" />
+						<s:Button id="playSymbolButton" click="onClick(event)" label="►" width="100" />
+						<s:Button id="stopSymbolButton" label="￭" click="onClick(event)" width="100" />
+						<s:Button id="swapColorButton" label="Swap Color" click="onClick(event)" width="100"/>
 					</s:VGroup>
-					<BB:SymbolPreviewer  width="100%" height="100%" />
+					<BB:SymbolPreviewer id="symbolPreviewer" symbol="{elementVSwappingList.lastSelectedElement}" width="100%" height="100%" />
 					</s:HGroup>
 				</s:VGroup>
 			</s:VGroup>
-			<BB:VSwappingList initialize="initializeSwappingList()" id="elementVSwappingList" firstLabel="Symbols" secondLabel="Textures" width="100%" height="100%">
-
-			</BB:VSwappingList>
+			<s:VGroup width="100%" height="100%" >
+				<BB:VSwappingList id="elementVSwappingList" width="100%" height="100%" />
+				<s:HGroup  width="100%" >
+					<s:Spacer width="100%" />
+					<s:Button id="exportButton" label="Export" click="onClick(event)" />
+				</s:HGroup>
+			</s:VGroup>
 		</s:HGroup>
 	</s:VGroup>
 </s:WindowedApplication>

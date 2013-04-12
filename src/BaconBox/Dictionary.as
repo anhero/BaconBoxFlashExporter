@@ -11,7 +11,7 @@ public class Dictionary {
 	}
 
 	public function setValue(key:String, value:Object):void{
-		if(_internalDictionary[key] != undefined){
+		if(_internalDictionary[key] != undefined || value === null){
 			_size++;
 		}
 		_internalDictionary[key] = value;
@@ -34,7 +34,7 @@ public class Dictionary {
 	}
 
 	public function contains(key:String):Boolean{
-		return _internalDictionary[key] != undefined;
+		return !(_internalDictionary[key] === undefined);
 	}
 
 	public function get internalDictionary():Object {

@@ -9,10 +9,13 @@ package BaconBox {
 import flash.display.Loader;
 import flash.display.MovieClip;
 import flash.display.Sprite;
+import flash.display3D.textures.TextureBase;
 import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.events.IEventDispatcher;
 import flash.filesystem.File;
+import flash.filesystem.FileMode;
+import flash.filesystem.FileStream;
 import flash.net.URLRequest;
 import flash.system.ApplicationDomain;
 import flash.utils.getQualifiedClassName;
@@ -40,42 +43,69 @@ public class TextureAtlas extends EventDispatcher {
 		_scale = 1;
 	}
 
-	public function loadFromFile(file:File):void{
-		_file = file;
-		_fileProxy = new ObjectProxy(file);
+	public static function loadFromFile(file:File): Array {
+		var tempArray:Array;
 		if(file.extension == "json"){
-			loadFromJson(file);
+			tempArray = loadFromJson(file);
 		}
 		else if(file.extension == "swf"){
-			loadFromSWF(file);
+			tempArray = new Array();
+			tempArray.push(loadFromSWF(file));
 		}
+		return tempArray;
 	}
-	private function loadFromJson(file:File):void{
-		trace("Loading", file.name, "as json");
+	private static function loadFromJson(file:File): Array{
+		var textureAtlasArray:Array = new Array();
+		var fileStream:FileStream = new FileStream();
+		fileStream.open(file, FileMode.READ);
+		var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+		var jsonObject:Object = JSON.parse(jsonData);
+		for each(var textureName:String in jsonObject.textureNames){
+			var textureAtlas:TextureAtlas = new TextureAtlas();
+			textureAtlas.name = textureName;
+			var textureAtlasJson:Object = jsonObject[textureName];
+			for each(var key:String in textureAtlasJson["textures"]){
+				textureAtlas.textureHash.setValue(key, null);
+			}
+			for each(var key:String in textureAtlasJson["symbols"]){
+				textureAtlas.symbolHash.setValue(key, null);
+			}
+			textureAtlas.localLoadFromSWF(new File(jsonObject.swfName));
+			textureAtlasArray.push(textureAtlas);
+		}
+		return textureAtlasArray;
 	}
 
-	private function loadFromSWF(file:File):void{
-		_name = file.name.split('.')[0];
+	private static function loadFromSWF(file:File):TextureAtlas{
+		var textureAtlas:TextureAtlas = new TextureAtlas();
+		textureAtlas._name = file.name.split('.')[0];
+		textureAtlas.localLoadFromSWF(file);
+		return textureAtlas;
+	}
+
+	private function localLoadFromSWF(file:File):void{
+		_file = file
+		_fileProxy = new ObjectProxy(file);
 		//Should load this stuff with a filestream and Loader.loadBytes.
 		//It would make it easier to load a SWC if we want to support it in the future.
 		//(We could still unzip it in a temp folder, but this would be inelegant and a bit slower).
 		_loader.load(new URLRequest("file:///" + file.nativePath));
 
 		_loader.contentLoaderInfo.addEventListener(Event.COMPLETE,
-		function (event:Event){
-			_appDomain = event.target.applicationDomain;
+				function (event:Event){
+					_appDomain = event.target.applicationDomain;
 
-			var classNames = _appDomain.getQualifiedDefinitionNames();
-			for each(var className:String in classNames){
-				pushClassDef(_appDomain.getDefinition(className));
+					var classNames = _appDomain.getQualifiedDefinitionNames();
+					for each(var className:String in classNames){
+						pushClassDef(_appDomain.getDefinition(className));
 
-			}
-		});
+					}
+				});
 	}
 
 	private function pushClassDef(classDef:Object):void {
 		var object:Object = new classDef;
-		var className:String = getQualifiedClassName(object);
+		var className:String = getQualifiedClassName(object).replace("::",'.');
 		var shortClassName:String = className.split("::")[1];
 		if(shortClassName == null || shortClassName == ""){
 			shortClassName = className;
@@ -90,6 +120,10 @@ public class TextureAtlas extends EventDispatcher {
 				}
 			}
 		}
+	}
+
+	public function export(exportPath:File):void {
+
 	}
 
 	public function get name():String {

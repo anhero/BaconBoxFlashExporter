@@ -1,12 +1,117 @@
 <?xml version="1.0"?>
-<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"  initialize="this.backgroundFill = firstBackgroundColor; addElement(_container)" resize="placeSymbol()">
 <fx:Declarations>
-<fx:String id="borderColor">"black"</fx:String>
-<fx:int id="borderWeight">3</fx:int>
+<s:SolidColorStroke id="firstBorderColor" color="black" />
+<s:SolidColorStroke id="secondBorderColor" color="white" />
+<s:SolidColor id="firstBackgroundColor" color="white" />
+<s:SolidColor id="secondBackgroundColor" color="black" />
 
+<fx:int id="borderWeight">3</fx:int>
+<fx:int id="margin">10</fx:int>
 </fx:Declarations>
+
+<fx:Script><![CDATA[
+	import mx.core.UIComponent;
+	import mx.events.PropertyChangeEvent;
+	import mx.events.PropertyChangeEventKind;
+
+	private var _symbol:DisplayObject;
+	private var _container:UIComponent = new UIComponent();
+	private var _isPlaying:Boolean = false;
+	private var _colorSwapped:Boolean = false;
+	[Bindable]
+	public function get symbol():DisplayObject {
+		return _symbol;
+	}
+	[Bindable]
+	public function set symbol(value:DisplayObject):void {
+		_symbol = value;
+		clearContainer()
+		if(value){
+			recursiveStop(value as DisplayObjectContainer, !_isPlaying, 1);
+			_container.addChild(value);
+			placeSymbol();
+		}
+	}
+
+	public function swapColor():void{
+		if(!_colorSwapped){
+			this.backgroundFill = secondBackgroundColor;
+			this.borderStroke = secondBorderColor;
+			this.borderStroke.weight = borderWeight;
+
+		}
+		else{
+			this.backgroundFill = firstBackgroundColor;
+			this.borderStroke = firstBorderColor;
+			this.borderStroke.weight = borderWeight;
+		}
+		_colorSwapped = !_colorSwapped;
+	}
+
+	public function play():void {
+		_isPlaying = true;
+		recursiveStop(symbol as DisplayObjectContainer, false, 1);
+	}
+
+	public function stop():void {
+		_isPlaying = false;
+		recursiveStop(symbol as DisplayObjectContainer, true, 1);
+	}
+
+	private function clearContainer():void{
+		if(_container.numChildren != 0){
+			while(_container.numChildren){
+				_container.removeChildAt(0);
+			}
+		}
+	}
+	private function placeSymbol():void {
+		if(symbol){
+			if(this.width/this.height <  symbol.width /  symbol.height){
+				var sizeRatio:Number = symbol.height / symbol.width;
+				symbol.width = this.width - margin*2;
+				symbol.height = symbol.width * sizeRatio;
+			}
+			else{
+				var sizeRatio:Number =  symbol.width / symbol.height;
+				symbol.height = this.height - margin*2;
+				symbol.width = symbol.height * sizeRatio;
+			}
+
+
+			symbol.x += (margin - symbol.getBounds(this).left);
+			symbol.y += (margin - symbol.getBounds(this).top);
+
+			symbol.x += ((symbol.getBounds(this).left + this.width - symbol.getBounds(this).right)/ 2) - margin;
+			symbol.y += ((symbol.getBounds(this).top + this.height - symbol.getBounds(this).bottom) / 2) - margin;
+		}
+	}
+
+	private function recursiveStop(parentClip:DisplayObjectContainer, useStop:Boolean = true, gotoFrame:Object = null):void {
+		if(parentClip){
+			var tmpClip:MovieClip = parentClip as MovieClip;
+			if (tmpClip) {
+				if (useStop) {
+					(gotoFrame != null) ? tmpClip.gotoAndStop(gotoFrame) : tmpClip.stop();
+				}else {
+					(gotoFrame != null) ? tmpClip.gotoAndPlay(gotoFrame) : tmpClip.play();
+				}
+			}
+
+			var i:int = parentClip.numChildren;
+			while(i--){
+				if(parentClip.getChildAt(i) is DisplayObjectContainer){
+					recursiveStop(parentClip.getChildAt(i) as DisplayObjectContainer, useStop, gotoFrame);
+				}
+			}
+		}
+	}
+
+	]]></fx:Script>
+
 	<s:borderStroke>
-	  <s:SolidColorStroke weight="{borderWeight}" color="{borderColor}">
-	  </s:SolidColorStroke>
+		<s:SolidColorStroke weight="{borderWeight}" color="{firstBorderColor}">
+		</s:SolidColorStroke>
 	</s:borderStroke>
 </s:BorderContainer>

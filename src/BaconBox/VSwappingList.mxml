@@ -1,18 +1,20 @@
 <?xml version="1.0"?>
 <s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
-<fx:Declarations>
-	<fx:String id="firstLabel">First</fx:String>
-	<fx:String id="secondLabel">Second</fx:String>
-	<!--<fx:Object id="firstItemRenderer"></fx:Object>-->
-	<!--<fx:Object id="secondItemRenderer"></fx:Object>-->
-</fx:Declarations>
 		<fx:Script><![CDATA[
+			import mx.collections.SortField;
 			import mx.controls.listClasses.ListItemRenderer;
+			import mx.events.PropertyChangeEvent;
+			import mx.events.PropertyChangeEventKind;
+			import mx.utils.object_proxy;
 
 			import spark.collections.Sort;
 			import spark.components.supportClasses.ItemRenderer;
 			import spark.events.IndexChangeEvent;
+			import spark.events.ListEvent;
 
+			private var _lastSelectedElement:DisplayObject;
+
+			private var _selectedTextureAtlas:TextureAtlas;
 
 			private function swapSelected(source:List, dest:List):void {
 				for each(var index in source.selectedIndices) {
@@ -24,44 +26,105 @@
 				}
 			}
 
+			private function updateSelectedTextureAtlas():void{
+				selectedTextureAtlas.textureHash.clearDictionary();
+				selectedTextureAtlas.symbolHash.clearDictionary();
+				for each(var item:Object in symbolList.dataProvider){
+					selectedTextureAtlas.symbolHash.setValue(item.className, item);
+				}
+				for each(var item:Object in textureList.dataProvider){
+					selectedTextureAtlas.textureHash.setValue(item.className, item);
+				}
+
+			}
+
 			private function sortList():void {
-				var firstListProvider:ArrayCollection = (firstList.dataProvider as ArrayCollection);
-				var secondListProvider:ArrayCollection = (secondList.dataProvider as ArrayCollection);
-				firstListProvider.sort = new Sort();
-				firstListProvider.refresh();
-				secondListProvider.sort = new Sort();
-				secondListProvider.refresh();
+				var symbolListProvider:ArrayCollection = (symbolList.dataProvider as ArrayCollection);
+				var textureListProvider:ArrayCollection = (textureList.dataProvider as ArrayCollection);
+				var nameSortField:SortField = new SortField();
+				nameSortField.name = "shortClassName";
+				nameSortField.numeric = false;
+				var nameSort:Sort = new Sort();
+				nameSort.fields = [nameSortField];
+
+				symbolListProvider.sort = nameSort;
+				symbolListProvider.refresh();
+				textureListProvider.sort = nameSort;
+
+				textureListProvider.refresh();
 			}
 
 			private function swapButton_clickHandler(event:MouseEvent):void {
-				swapSelected(firstList, secondList);
-				swapSelected(secondList, firstList);
-				firstList.selectedIndex = -1;
-				firstList.selectedIndex = -1;
+				swapSelected(symbolList, textureList);
+				swapSelected(textureList, symbolList);
+				symbolList.selectedIndex = -1;
+				symbolList.selectedIndex = -1;
 				sortList();
+				updateSelectedTextureAtlas();
 			}
 
 			private function onListChange(event:IndexChangeEvent):void {
-				var test:ItemRenderer = (firstList.dataGroup.getElementAt(0) as ItemRenderer);
-				if(event.currentTarget.id == "firstList"){
-			   		secondList.selectedIndex = -1;
+				var test:ItemRenderer = (symbolList.dataGroup.getElementAt(0) as ItemRenderer);
+				if (event.currentTarget.id == "symbolList") {
+					textureList.selectedIndex = -1;
 				}
-				else if(event.currentTarget.id == "secondList"){
-					firstList.selectedIndex = -1;
+				else if (event.currentTarget.id == "textureList") {
+					symbolList.selectedIndex = -1;
 				}
 
 			}
 
-			public function clear():void{
-				firstList.dataProvider = new ArrayCollection();
-				secondList.dataProvider = new ArrayCollection();
+			public function clear():void {
+				symbolList.dataProvider = new ArrayCollection();
+				textureList.dataProvider = new ArrayCollection();
+			}
+
+			[Bindable('selectedElementChanged')]
+			public function get lastSelectedElement():DisplayObject {
+				return _lastSelectedElement;
+			}
+
+			public function set lastSelectedElement(value:DisplayObject):void {
+				var oldValue:DisplayObject = _lastSelectedElement;
+				_lastSelectedElement = value;
+				dispatchEvent(new PropertyChangeEvent('selectedElementChanged',
+						false, false, PropertyChangeEventKind.UPDATE,
+						'lastSelectedElement', oldValue, value, this));
+			}
+
+			private function onItemRollOut(event:ListEvent):void {
+				if (symbolList.selectedItems.length) {
+					lastSelectedElement = new symbolList.selectedItem.classDef;
+				}
+				else if (textureList.selectedItems.length) {
+					lastSelectedElement = new textureList.selectedItem.classDef;
+				}
+				else {
+					lastSelectedElement = null;
+				}
+			}
+
+			public function get selectedTextureAtlas():TextureAtlas {
+				return _selectedTextureAtlas;
+			}
+
+			public function set selectedTextureAtlas(value:TextureAtlas):void {
+				_selectedTextureAtlas = value;
+				clear();
+				for (var key:String in _selectedTextureAtlas.symbolHash.internalDictionary) {
+					symbolList.dataProvider.addItem(_selectedTextureAtlas.symbolHash.getValue(key));
+				}
+				for (var key:String in _selectedTextureAtlas.textureHash.internalDictionary) {
+					textureList.dataProvider.addItem(_selectedTextureAtlas.textureHash.getValue(key));
+				}
+				sortList();
 			}
 			]]></fx:Script>
 		<s:VGroup width="100%" height="100%">
-			<s:Label text="{firstLabel}"></s:Label>
-			<s:List id="firstList" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
+			<s:Label text="Symbols"></s:Label>
+			<s:List id="symbolList" itemRollOut="onItemRollOut(event)" itemRollOver="lastSelectedElement = new event.item.classDef" itemRenderer="BaconBox.VSwappingSWFElementRenderer" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
 				<s:dataProvider>
-				   <s:ArrayCollection id="firstCollection">
+				   <s:ArrayCollection id="symbolCollection">
 
 				   </s:ArrayCollection>
 				</s:dataProvider>
@@ -71,10 +134,10 @@
 		<s:Button id="swapButton" label="Swap" click="swapButton_clickHandler(event)"></s:Button>
 
 		<s:VGroup width="100%" height="100%">
-			<s:Label text="{secondLabel}"></s:Label>
-			<s:List id="secondList" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
+			<s:Label text="Textures"></s:Label>
+			<s:List id="textureList" itemRollOut="onItemRollOut(event)" itemRollOver="lastSelectedElement = new event.item.classDef" itemRenderer="BaconBox.VSwappingSWFElementRenderer" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
 				<s:dataProvider>
-					<s:ArrayCollection id="secondCollection">
+					<s:ArrayCollection id="textureCollection">
 					</s:ArrayCollection>
 				</s:dataProvider>
 			</s:List>
