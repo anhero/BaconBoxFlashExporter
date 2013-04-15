@@ -107,7 +107,7 @@ public class Element {
 	public function getSymbolXML():XML{
 		var symbol:DisplayObjectContainer = new _classDef;
 		var xml:XML = <Symbol></Symbol>;
-		xml.@classname = _className;
+		xml.@className = _className;
 		var mc:MovieClip = symbol as MovieClip;
 		if(mc)xml.@frameCount = mc.totalFrames;
 
@@ -123,7 +123,7 @@ public class Element {
 				frameXML.appendChild(childXML);
 				var child:DisplayObject = symbol.getChildAt(childIndex);
 				childXML.@name = child.name;
-				childXML.@classname = getQualifiedClassName(child).replace("::", ".");
+				childXML.@className = getQualifiedClassName(child).replace("::", ".");
 				var m:Matrix = child.transform.matrix;
 				childXML.@a = m.a;
 				childXML.@b = m.b;
