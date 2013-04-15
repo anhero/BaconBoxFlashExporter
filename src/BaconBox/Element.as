@@ -8,7 +8,7 @@ import flash.display.DisplayObjectContainer;
 import flash.display.MovieClip;
 import flash.geom.Matrix;
 import flash.geom.Rectangle;
-import avmplus.getQualifiedClassName;
+import flash.utils.getQualifiedClassName;
 import flash.utils.getQualifiedSuperclassName;
 
 import spark.effects.Scale;
@@ -107,7 +107,7 @@ public class Element {
 	public function getSymbolXML():XML{
 		var symbol:DisplayObjectContainer = new _classDef;
 		var xml:XML = <Symbol></Symbol>;
-		xml.@className = _className;
+		xml.@classname = _className;
 		var mc:MovieClip = symbol as MovieClip;
 		if(mc)xml.@frameCount = mc.totalFrames;
 
@@ -123,7 +123,7 @@ public class Element {
 				frameXML.appendChild(childXML);
 				var child:DisplayObject = symbol.getChildAt(childIndex);
 				childXML.@name = child.name;
-				childXML.@className =_className.replace("::", ".");
+				childXML.@classname = getQualifiedClassName(child).replace("::", ".");
 				var m:Matrix = child.transform.matrix;
 				childXML.@a = m.a;
 				childXML.@b = m.b;
