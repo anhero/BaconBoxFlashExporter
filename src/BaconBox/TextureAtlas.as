@@ -21,7 +21,7 @@ import flash.filesystem.FileMode;
 import flash.filesystem.FileStream;
 import flash.net.URLRequest;
 import flash.system.ApplicationDomain;
-import flash.utils.getQualifiedClassName;
+import avmplus.getQualifiedClassName;
 
 import mx.core.IMXMLObject;
 import mx.utils.ObjectProxy;
