@@ -108,11 +108,13 @@ public class Element {
 		var symbol:DisplayObjectContainer = new _classDef;
 		var xml:XML = <Symbol></Symbol>;
 		xml.@classname = _className;
-
 		var mc:MovieClip = symbol as MovieClip;
+		if(mc)xml.@frameCount = mc.totalFrames;
+
 		var frameLimit = (mc ? mc.totalFrames : 1);
 		for(var frame:int = 1; frame <= frameLimit; frame++){
 			var frameXML:XML = <Frame></Frame>;
+			frameXML.@index=frame-1;
 			xml.appendChild(frameXML);
 
 			if(mc)mc.gotoAndStop(frame);
@@ -123,7 +125,13 @@ public class Element {
 				childXML.@name = child.name;
 				childXML.@classname = getQualifiedClassName(child).replace("::", ".");
 				var m:Matrix = child.transform.matrix;
-				childXML.@transform = m.a +"," + m.b +"," + m.c +"," + m.d +"," + m.tx +"," + m.ty;
+				childXML.@a = m.a;
+				childXML.@b = m.b;
+				childXML.@c = m.c;
+				childXML.@d = m.d;
+				childXML.@tx = m.tx;
+				childXML.@ty = m.ty;
+
 				childXML.@color = child.transform.colorTransform.color;
 			}
 

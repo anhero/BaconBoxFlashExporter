@@ -139,14 +139,17 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function saveXML(exportPath:File, texturePacker:TexturePacker):void{
 		var textureSheetXML = <TextureSheet></TextureSheet>;
-		var texturesXML:XML = <Symbols></Symbols>;
-		var symbolsXML:XML =<Textures></Textures>;
-		textureSheetXML.appendChild(texturesXML);
+		var symbolsXML:XML = <Symbols></Symbols>;
+		var textureXML:XML =<Texture></Texture>;
+		textureXML.@name= _name;
+		textureXML.@path= _name + ".png";
+
+		textureSheetXML.appendChild(textureXML);
 		textureSheetXML.appendChild(symbolsXML);
 
 		var subtexturesXML:Vector.<XML> = texturePacker.getXMLData();
 		for each (var subtextureXML:XML in subtexturesXML){
-			texturesXML.appendChild(subtextureXML);
+			textureXML.appendChild(subtextureXML);
 		}
 
 		for each (var element:Object in symbolHash.internalDictionary){

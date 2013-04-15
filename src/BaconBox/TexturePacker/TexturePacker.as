@@ -60,7 +60,7 @@ public class TexturePacker {
 	public function getXMLData():Vector.<XML>{
 		var xmlVector:Vector.<XML> = new Vector.<XML>();
 		for each(var node in _nodes){
-			var xml:XML = <subTexture></subTexture>
+			var xml:XML = <SubTexture></SubTexture>
 			xml.@name = node.textureInfo.name;
 			xml.@registrationPointX = node.textureInfo.bounds.x;
 			xml.@registrationPointY = node.textureInfo.bounds.y;
