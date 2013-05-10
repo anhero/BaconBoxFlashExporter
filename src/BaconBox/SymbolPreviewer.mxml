@@ -79,12 +79,13 @@
 				symbol.width = symbol.height * sizeRatio;
 			}
 
+			var bounds:Rectangle = symbol.getBounds(this);
 
-			symbol.x += (margin - symbol.getBounds(this).left);
-			symbol.y += (margin - symbol.getBounds(this).top);
+			symbol.x += (margin - bounds.left);
+			symbol.y += (margin - bounds.top);
 
-			symbol.x += ((symbol.getBounds(this).left + this.width - symbol.getBounds(this).right)/ 2) - margin;
-			symbol.y += ((symbol.getBounds(this).top + this.height - symbol.getBounds(this).bottom) / 2) - margin;
+			symbol.x += ((bounds.left + this.width - bounds.right)/ 2) - margin;
+			symbol.y += ((bounds.top + this.height - bounds.bottom) / 2) - margin;
 		}
 	}
 
