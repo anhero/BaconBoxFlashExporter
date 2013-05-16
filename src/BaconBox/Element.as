@@ -8,8 +8,12 @@ import flash.display.DisplayObjectContainer;
 import flash.display.MovieClip;
 import flash.geom.Matrix;
 import flash.geom.Rectangle;
+import flash.text.TextField;
+import flash.text.TextFormat;
 import flash.utils.getQualifiedClassName;
 import flash.utils.getQualifiedSuperclassName;
+
+import mx.core.UITextFormat;
 
 import spark.effects.Scale;
 
@@ -108,33 +112,73 @@ public class Element {
 		var symbol:DisplayObjectContainer = new _classDef;
 		var xml:XML = <Symbol></Symbol>;
 		xml.@className = _className;
-		var mc:MovieClip = symbol as MovieClip;
-		if(mc)xml.@frameCount = mc.totalFrames;
+		var text:TextField = symbol.getChildByName("text") as TextField;
+		if(text){
+			var tfFormat:TextFormat = text.defaultTextFormat;
+			xml.@textfield =  true;
+			xml.@fontSize = tfFormat.size;
+			xml.@text =  text.text;
+			xml.@font =  tfFormat.font;
+			xml.@alignment =  tfFormat.align;
+			xml.@width = text.width;
+			xml.@height = text.height;
+		}
+		else{
+			var mc:MovieClip = symbol as MovieClip;
+				xml.@frameCount = mc.totalFrames;
+				if(mc){
+					var labels:Array = mc.currentLabels;
+					var labelsXML:XML = <labels></labels>;
+					for each(var label in labels){
+						var labelXML:XML = <label></label>;
+						var labelMC:MovieClip = new _classDef as MovieClip;
+						labelXML.@name =  label.name;
+						labelXML.@startFrame =  label.frame -1;
 
-		var frameLimit = (mc ? mc.totalFrames : 1);
-		for(var frame:int = 1; frame <= frameLimit; frame++){
-			var frameXML:XML = <Frame></Frame>;
-			frameXML.@index=frame-1;
-			xml.appendChild(frameXML);
+						for(var frame:int = label.frame; frame <= labelMC.totalFrames; frame++){
+							labelMC.gotoAndStop(frame);
+							if(labelMC.currentLabel != label.name){
+								labelXML.@endFrame = frame -2;
+								break;
+							}
+							else if(frame == labelMC.totalFrames){
+								labelXML.@endFrame = frame -1;
+							}
+						}
+						xml.appendChild(labelXML);
+					}
+//					if(labels.length) xml.appendChild(labelsXML);
+				}
 
-			if(mc)mc.gotoAndStop(frame);
-			for (var childIndex:int = 0; childIndex < symbol.numChildren; childIndex++) {
-				var childXML:XML = <Child></Child>;
-				frameXML.appendChild(childXML);
-				var child:DisplayObject = symbol.getChildAt(childIndex);
-				childXML.@name = child.name;
-				childXML.@className = getQualifiedClassName(child).replace("::", ".");
-				var m:Matrix = child.transform.matrix;
-				childXML.@a = m.a;
-				childXML.@b = m.b;
-				childXML.@c = m.c;
-				childXML.@d = m.d;
-				childXML.@tx = m.tx;
-				childXML.@ty = m.ty;
 
-				childXML.@color = child.transform.colorTransform.color;
+
+			var frameLimit = (mc ? mc.totalFrames : 1);
+
+
+			for(var frame:int = 1; frame <= frameLimit; frame++){
+				var frameXML:XML = <Frame></Frame>;
+				frameXML.@index=frame-1;
+				xml.appendChild(frameXML);
+
+				if(mc)mc.gotoAndStop(frame);
+				for (var childIndex:int = 0; childIndex < symbol.numChildren; childIndex++) {
+					var childXML:XML = <Child></Child>;
+					frameXML.appendChild(childXML);
+					var child:DisplayObject = symbol.getChildAt(childIndex);
+					childXML.@name = child.name;
+					childXML.@className = getQualifiedClassName(child).replace("::", ".");
+					var m:Matrix = child.transform.matrix;
+					childXML.@a = m.a;
+					childXML.@b = m.b;
+					childXML.@c = m.c;
+					childXML.@d = m.d;
+					childXML.@tx = m.tx;
+					childXML.@ty = m.ty;
+
+					childXML.@color = child.transform.colorTransform.color;
+				}
+
 			}
-
 		}
 	  	return xml;
 	}
