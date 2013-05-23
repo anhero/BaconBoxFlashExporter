@@ -6,6 +6,8 @@ import flash.display.BitmapData;
 import flash.display.DisplayObject;
 import flash.display.DisplayObjectContainer;
 import flash.display.MovieClip;
+import flash.display.Sprite;
+import flash.geom.ColorTransform;
 import flash.geom.Matrix;
 import flash.geom.Rectangle;
 import flash.text.TextField;
@@ -112,6 +114,7 @@ public class Element {
 		var symbol:DisplayObjectContainer = new _classDef;
 		var xml:XML = <Symbol></Symbol>;
 		xml.@className = _className;
+
 		var text:TextField = symbol.getChildByName("text") as TextField;
 		if(text){
 			var tfFormat:TextFormat = text.defaultTextFormat;
@@ -122,6 +125,12 @@ public class Element {
 			xml.@alignment =  tfFormat.align;
 			xml.@width = text.width;
 			xml.@height = text.height;
+			var color:uint = text.textColor;
+			var red:int = (( color >> 16 ) & 0xFF);
+			var green:int = (( color >> 8 ) & 0xFF);
+			var blue:int = (color & 0xFF);
+			xml.@color = [red,green,blue];
+
 		}
 		else{
 			var mc:MovieClip = symbol as MovieClip;
@@ -174,8 +183,12 @@ public class Element {
 					childXML.@d = m.d;
 					childXML.@tx = m.tx;
 					childXML.@ty = m.ty;
-
-					childXML.@color = child.transform.colorTransform.color;
+					var ct:ColorTransform = child.transform.colorTransform;
+					if(ct.redOffset != 0 || ct.greenOffset != 0 || ct.blueOffset != 0 || ct.alphaOffset != 0 ||
+							ct.redMultiplier != 1 || ct.greenMultiplier != 1 || ct.blueMultiplier!= 1 || ct.alphaMultiplier!= 1){
+						childXML.@colorTransform = [ct.redMultiplier, ct.redOffset, ct.greenMultiplier, ct.greenOffset, ct.blueMultiplier, ct.blueOffset, ct.alphaMultiplier, ct.alphaOffset];
+					}
+					//childXML.@color = child.transform.colorTransform.color;
 				}
 
 			}
