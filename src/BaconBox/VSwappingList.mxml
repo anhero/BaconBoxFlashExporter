@@ -5,6 +5,7 @@
 			import mx.controls.listClasses.ListItemRenderer;
 			import mx.events.PropertyChangeEvent;
 			import mx.events.PropertyChangeEventKind;
+			import mx.utils.ObjectProxy;
 			import mx.utils.object_proxy;
 
 			import spark.collections.Sort;
@@ -12,8 +13,8 @@
 			import spark.events.IndexChangeEvent;
 			import spark.events.ListEvent;
 
-			private var _lastSelectedElement:DisplayObject;
-
+			private var _lastSelectedDisplayObject:DisplayObject;
+			private var _lastSelectedElement:ObjectProxy;
 			private var _selectedTextureAtlas:TextureAtlas;
 
 			private function swapSelected(source:List, dest:List):void {
@@ -26,13 +27,13 @@
 				}
 			}
 
-			private function updateSelectedTextureAtlas():void{
+			private function updateSelectedTextureAtlas():void {
 				selectedTextureAtlas.textureHash.clearDictionary();
 				selectedTextureAtlas.symbolHash.clearDictionary();
-				for each(var item:Object in symbolList.dataProvider){
+				for each(var item:Object in symbolList.dataProvider) {
 					selectedTextureAtlas.symbolHash.setValue(item.className, item);
 				}
-				for each(var item:Object in textureList.dataProvider){
+				for each(var item:Object in textureList.dataProvider) {
 					selectedTextureAtlas.textureHash.setValue(item.className, item);
 				}
 
@@ -67,9 +68,11 @@
 				var test:ItemRenderer = (symbolList.dataGroup.getElementAt(0) as ItemRenderer);
 				if (event.currentTarget.id == "symbolList") {
 					textureList.selectedIndex = -1;
+					lastSelectedElement = null;
 				}
 				else if (event.currentTarget.id == "textureList") {
 					symbolList.selectedIndex = -1;
+					lastSelectedElement = textureList.selectedItem;
 				}
 
 			}
@@ -79,13 +82,27 @@
 				textureList.dataProvider = new ArrayCollection();
 			}
 
+			[Bindable('selectedDisplayObjectChanged')]
+			public function get lastSelectedDisplayObject():DisplayObject {
+				return _lastSelectedDisplayObject;
+			}
+
+			public function set lastSelectedDisplayObject(value:DisplayObject):void {
+				var oldValue:DisplayObject = _lastSelectedDisplayObject;
+				_lastSelectedDisplayObject = value;
+				dispatchEvent(new PropertyChangeEvent('selectedDisplayObjectChanged',
+						false, false, PropertyChangeEventKind.UPDATE,
+						'lastSelectedDisplayObject', oldValue, value, this));
+			}
+
+
 			[Bindable('selectedElementChanged')]
-			public function get lastSelectedElement():DisplayObject {
+			public function get lastSelectedElement():ObjectProxy {
 				return _lastSelectedElement;
 			}
 
-			public function set lastSelectedElement(value:DisplayObject):void {
-				var oldValue:DisplayObject = _lastSelectedElement;
+			public function set lastSelectedElement(value:ObjectProxy):void {
+				var oldValue:ObjectProxy = _lastSelectedElement;
 				_lastSelectedElement = value;
 				dispatchEvent(new PropertyChangeEvent('selectedElementChanged',
 						false, false, PropertyChangeEventKind.UPDATE,
@@ -94,13 +111,13 @@
 
 			private function onItemRollOut(event:ListEvent):void {
 				if (symbolList.selectedItems.length) {
-					lastSelectedElement = new symbolList.selectedItem.classDef;
+					lastSelectedDisplayObject = new symbolList.selectedItem.classDef;
 				}
 				else if (textureList.selectedItems.length) {
-					lastSelectedElement = new textureList.selectedItem.classDef;
+					lastSelectedDisplayObject = new textureList.selectedItem.classDef;
 				}
 				else {
-					lastSelectedElement = null;
+					lastSelectedDisplayObject = null;
 				}
 			}
 
@@ -122,7 +139,7 @@
 			]]></fx:Script>
 		<s:VGroup width="100%" height="100%">
 			<s:Label text="Symbols"></s:Label>
-			<s:List id="symbolList" itemRollOut="onItemRollOut(event)" itemRollOver="if(event.item)lastSelectedElement = new event.item.classDef" itemRenderer="BaconBox.VSwappingSWFElementRenderer" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
+			<s:List id="symbolList" itemRollOut="onItemRollOut(event)" itemRollOver="if(event.item)lastSelectedDisplayObject = new event.item.classDef" itemRenderer="BaconBox.VSwappingSWFElementRenderer" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
 				<s:dataProvider>
 				   <s:ArrayCollection id="symbolCollection">
 
@@ -135,7 +152,7 @@
 
 		<s:VGroup width="100%" height="100%">
 			<s:Label text="Textures"></s:Label>
-			<s:List id="textureList" itemRollOut="onItemRollOut(event)" itemRollOver="if(event.item)lastSelectedElement = new event.item.classDef" itemRenderer="BaconBox.VSwappingSWFElementRenderer" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
+			<s:List id="textureList" itemRollOut="onItemRollOut(event)" itemRollOver="if(event.item)lastSelectedDisplayObject = new event.item.classDef" itemRenderer="BaconBox.VSwappingSWFElementRenderer" change="onListChange(event)" allowMultipleSelection="true" width="100%" height="100%">
 				<s:dataProvider>
 					<s:ArrayCollection id="textureCollection">
 					</s:ArrayCollection>

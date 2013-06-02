@@ -13,6 +13,7 @@ public class TextureInfo {
 	private var _name:String;
 	private var _bitmap:BitmapData;
 	private var _bounds:Rectangle;
+	private var _blend:Boolean;
 
 	public function TextureInfo() {
 
@@ -40,6 +41,14 @@ public class TextureInfo {
 
 	public function set name(value:String):void {
 		_name = value;
+	}
+
+	public function get blend():Boolean {
+		return _blend;
+	}
+
+	public function set blend(value:Boolean):void {
+		_blend = value;
 	}
 }
 }

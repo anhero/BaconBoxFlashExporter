@@ -62,6 +62,7 @@ public class TexturePacker {
 		for each(var node in _nodes){
 			var xml:XML = <SubTexture></SubTexture>
 			xml.@name = node.textureInfo.name;
+			xml.@blend = node.textureInfo.blend;
 			xml.@registrationPointX = node.textureInfo.bounds.x;
 			xml.@registrationPointY = node.textureInfo.bounds.y;
 			xml.@x = node.rect.x;

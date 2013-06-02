@@ -37,6 +37,7 @@ public class TextureAtlas extends EventDispatcher {
 	private var _loader:Loader = new Loader();
 	private var _appDomain:ApplicationDomain;
 	private var _textureHash:Dictionary = new Dictionary();
+	private var _opaqueTextures:Array = new Array();
 	private var _symbolHash:Dictionary = new Dictionary();
 
 	public function TextureAtlas() {
@@ -69,6 +70,10 @@ public class TextureAtlas extends EventDispatcher {
 			var textureAtlasJson:Object = jsonObject[textureName];
 			for each(var key:String in textureAtlasJson["textures"]){
 				textureAtlas.textureHash.setValue(key, null);
+			}
+			for each(var key:String in textureAtlasJson["opaqueTextures"]){
+				textureAtlas.textureHash.setValue(key, null);
+				textureAtlas.opaqueTextures.push(key);
 			}
 			for each(var key:String in textureAtlasJson["symbols"]){
 				textureAtlas.symbolHash.setValue(key, null);
@@ -115,7 +120,7 @@ public class TextureAtlas extends EventDispatcher {
 		if(shortClassName != "EntityHolderMovieClip" && shortClassName != "EntityHolderTextField" ){
 			if(object is MovieClip || object is Sprite){
 				if(_symbolHash.isEmpty() || _textureHash.contains(className)){
-					_textureHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef)));
+					_textureHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef, (_opaqueTextures.indexOf(className) == -1 ))));
 				}
 				else if(_symbolHash.contains(className)){
 					_symbolHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef)));
@@ -224,6 +229,14 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function set symbolHash(value:Dictionary):void {
 		_symbolHash = value;
+	}
+
+	public function get opaqueTextures():Array {
+		return _opaqueTextures;
+	}
+
+	public function set opaqueTextures(value:Array):void {
+		_opaqueTextures = value;
 	}
 }
 }

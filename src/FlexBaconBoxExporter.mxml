@@ -133,7 +133,7 @@
 						<s:Button id="stopSymbolButton" label="￭" click="onClick(event)" width="100" />
 						<s:Button id="swapColorButton" label="Swap Color" click="onClick(event)" width="100"/>
 					</s:VGroup>
-					<BB:SymbolPreviewer id="symbolPreviewer" symbol="{elementVSwappingList.lastSelectedElement}" width="100%" height="100%" />
+					<BB:SymbolPreviewer id="symbolPreviewer" symbol="{elementVSwappingList.lastSelectedDisplayObject}" width="100%" height="100%" />
 					</s:HGroup>
 				</s:VGroup>
 			</s:VGroup>
@@ -141,6 +141,7 @@
 				<BB:VSwappingList id="elementVSwappingList" width="100%" height="100%" />
 				<s:HGroup  width="100%" >
 					<s:Spacer width="100%" />
+					<s:CheckBox id="blendCheckBox" label="Blend" selected="{elementVSwappingList.lastSelectedElement.blend}" enabled="{elementVSwappingList.lastSelectedElement}" change="elementVSwappingList.lastSelectedElement.blend = blendCheckBox.selected" />
 					<s:Button id="exportButton" label="Export" click="onClick(event)" />
 				</s:HGroup>
 			</s:VGroup>

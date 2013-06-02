@@ -23,14 +23,16 @@ public class Element {
 	private var _className:String;
 	private var _shortClassName:String;
 	private var _classDef;
+	private var _blend:Boolean;
 
 	private static const edgeMarginRender:int = 2;
 	private static const edgeMarginOutput:int = 0;
 
-	public function Element(className:String,  shortClassName:String, classDef) {
+	public function Element(className:String,  shortClassName:String, classDef, blend:Boolean = true) {
 		_className =  className;
 		_shortClassName = shortClassName;
 		_classDef = classDef;
+		_blend = blend;
 	}
 
 	public function get className():String {
@@ -105,7 +107,8 @@ public class Element {
 
 		textureInfo.name = _className;
 		textureInfo.bitmap = bitmap;
-		textureInfo.bounds = bounds;
+		textureInfo.bounds = bounds		;
+		textureInfo.blend = _blend;
 
 		return textureInfo;
 	}
@@ -114,7 +117,6 @@ public class Element {
 		var symbol:DisplayObjectContainer = new _classDef;
 		var xml:XML = <Symbol></Symbol>;
 		xml.@className = _className;
-
 		var text:TextField = symbol.getChildByName("text") as TextField;
 		if(text){
 			var tfFormat:TextFormat = text.defaultTextFormat;
@@ -194,6 +196,14 @@ public class Element {
 			}
 		}
 	  	return xml;
+	}
+
+	public function get blend():Boolean {
+		return _blend;
+	}
+
+	public function set blend(value:Boolean):void {
+		_blend = value;
 	}
 }
 }
