@@ -37,6 +37,10 @@ function getSymbolName(prefix){
 }
 
 
+function getShortName(name){
+    return (name.substr(name.lastIndexOf('/') + 1));
+}
+
 function PutToAZ(s){
  for (var i = 0 ; i < s.length ; i++) {
   //if((s.charCodeAt(i) == 32)){
@@ -54,12 +58,17 @@ function PutToAZ(s){
 function itemLinkageCallback(item, index, items, context){
         if(! item.linkageExportForAS || ! (item.linkageBaseClass == newEntityBaseClassName || item.linkageBaseClass == newEntityTextFieldaseClassName)){
             item.linkageExportForAS = true;
-            item.linkageClassName = PutToAZ(item.shortName)
+            var name = getShortName(item.name);
+            item.linkageClassName = PutToAZ(name);
+
             item.linkageBaseClass = newEntityBaseClassName;
             item.linkageExportInFirstFrame = true;
+
+
         }
+    }
   
-}
+
 
 function elementSymbolConvertCallback(element, index, elements, context)
 {
@@ -67,9 +76,8 @@ function elementSymbolConvertCallback(element, index, elements, context)
         if(context.layer.layerType != "normal" || context.item.linkageBaseClass == newEntityTextFieldaseClassName) return;
         
         context.layer.locked=  false;
-     
          if(element.elementType == "shape" || element.elementType == "instance" && element.libraryItem.itemType == "bitmap") {
-             var currentSymbolName = getSymbolName(context.item.shortName + '_');
+             var currentSymbolName = getSymbolName(getShortName(context.item.name) + '_');
              fl.getDocumentDOM().selectNone();
              context.select();
              if(fl.getDocumentDOM().selection.length <= 0) return;
@@ -91,7 +99,7 @@ function elementSymbolConvertCallback(element, index, elements, context)
     
          else if(element.elementType == "text"){
              if(context.item.linkageBaseClass == newEntityTextFieldaseClassName) return;
-             var currentSymbolName = getSymbolName(context.item.shortName + '_');
+             var currentSymbolName = getSymbolName(getShortName(context.item.name) + '_');
              fl.getDocumentDOM().selectNone();
              context.select();
              if(fl.getDocumentDOM().selection.length <= 0) return;
