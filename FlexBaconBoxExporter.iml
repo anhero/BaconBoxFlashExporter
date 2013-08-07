@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="Flex" version="4">
-  <component name="FlexBuildConfigurationManager" active="testFlexExporter">
+  <component name="FlexBuildConfigurationManager" active="BaconBoxExporter">
     <configurations>
-      <configuration name="testFlexExporter" target-platform="Desktop" main-class="FlexBaconBoxExporter" output-file="TestFlexExporter.swf" output-folder="$MODULE_DIR$/out/production/testFlexExporter">
+      <configuration name="BaconBoxExporter" target-platform="Desktop" main-class="FlexBaconBoxExporter" output-file="BaconBoxExporter.swf" output-folder="$MODULE_DIR$/out/production/BaconBoxExporter">
         <dependencies target-player="11.6">
           <entries>
             <entry library-name="blooddy_crypto" library-level="project">
