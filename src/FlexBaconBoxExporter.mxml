@@ -77,6 +77,7 @@
         }
 
         private function reloadTextureAtlas():void {
+			_atlasList = new Array();
 			for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
 				if(_atlasList.indexOf(textureAtlas.loadFile.nativePath) == -1)_atlasList.push(textureAtlas.loadFile.nativePath);
 			}

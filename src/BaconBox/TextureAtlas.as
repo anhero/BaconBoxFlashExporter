@@ -32,6 +32,7 @@ import mx.utils.ObjectProxy;
 public class TextureAtlas extends EventDispatcher {
 	private var _name:String = new String();
 	private var _file:File;
+	private var _loadedFromJson:Boolean;
 	private var _loadFile:File;
 	private var _fileProxy:ObjectProxy;
 	private var _scale:Number;
@@ -51,6 +52,7 @@ public class TextureAtlas extends EventDispatcher {
 		_height = 2048;
 		_scale = 1;
         _finishedLoading = false;
+		_loadedFromJson = false;
 	}
 
 	public function destroy():void{
@@ -68,17 +70,22 @@ public class TextureAtlas extends EventDispatcher {
 		}
 		return tempArray;
 	}
+
 	private static function loadFromJson(file:File): Array{
 		var textureAtlasArray:Array = new Array();
 		var fileStream:FileStream = new FileStream();
 		fileStream.open(file, FileMode.READ);
 		var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+		fileStream.close()
 		var jsonObject:Object = JSON.parse(jsonData);
 		for each(var textureName:String in jsonObject.textureNames){
 			var textureAtlas:TextureAtlas = new TextureAtlas();
 			textureAtlas._loadFile = file;
 			textureAtlas.name = textureName;
+			textureAtlas._loadedFromJson = true;
 			var textureAtlasJson:Object = jsonObject[textureName];
+			if(textureAtlasJson.width)textureAtlas.width  = textureAtlasJson.width;
+			if(textureAtlasJson.height)textureAtlas.height  = textureAtlasJson.height;
 			for each(var key:String in textureAtlasJson["textures"]){
 				textureAtlas.textureHash.setValue(key, null);
 			}
@@ -209,6 +216,19 @@ public class TextureAtlas extends EventDispatcher {
 	}
 
 	public function set width(value:int):void {
+		if(_loadedFromJson){
+			var fileStream:FileStream = new FileStream();
+			fileStream.open(_loadFile, FileMode.READ);
+			var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+			var jsonObject:Object = JSON.parse(jsonData);
+			var textureAtlasJson:Object = jsonObject[_name];
+			textureAtlasJson.width = value;
+			fileStream.close();
+			fileStream.open(_loadFile, FileMode.WRITE);
+			fileStream.writeUTFBytes(JSON.stringify(jsonObject));
+			fileStream.close();
+			;
+		}
 		_width = value;
 	}
 
@@ -217,6 +237,19 @@ public class TextureAtlas extends EventDispatcher {
 	}
 
 	public function set height(value:int):void {
+		if(_loadedFromJson){
+			var fileStream:FileStream = new FileStream();
+			fileStream.open(_loadFile, FileMode.READ);
+			var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+			var jsonObject:Object = JSON.parse(jsonData);
+			var textureAtlasJson:Object = jsonObject[_name];
+			textureAtlasJson.height = value;
+			fileStream.close();
+			fileStream.open(_loadFile, FileMode.WRITE);
+			fileStream.writeUTFBytes(JSON.stringify(jsonObject));
+			fileStream.close();
+			;
+		}
 		_height = value;
 	}
 
@@ -278,6 +311,14 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function get loadFile():File {
 		return _loadFile;
+	}
+
+	public function get loadedFromJson():Boolean {
+		return _loadedFromJson;
+	}
+
+	public function set loadedFromJson(value:Boolean):void {
+		_loadedFromJson = value;
 	}
 }
 }
