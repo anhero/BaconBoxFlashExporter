@@ -1,90 +1,234 @@
 <?xml version="1.0"?>
-<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:BB="BaconBox.*" width="800" height="600" >
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:BB="BaconBox.*" width="800" height="600" creationComplete="creationCompleteHandler(event)">
 	<fx:Style source="./spark_graphite.css"/>
 
 	<fx:Script><![CDATA[
-		import BaconBox.TextureAtlas;
-		import BaconBox.VSwappingSWFElementRenderer;
+        import BaconBox.TextureAtlas;
+        import BaconBox.VSwappingSWFElementRenderer;
 
-		import mx.controls.Alert;
-		import mx.graphics.shaderClasses.ColorBurnShader;
+        import mx.controls.Alert;
+        import mx.events.FlexEvent;
+        import mx.graphics.shaderClasses.ColorBurnShader;
 
-		import spark.events.IndexChangeEvent;
+        import spark.events.IndexChangeEvent;
 
-		private function onClick(event:MouseEvent):void {
-			if (event.target.id == "loadButton") {
-				loadTextureAtlas();
+        private var _loadPending:int;
+        private var _atlasList:Array = new Array();
+        private var _exportPath:String;
+		private var _mustReloadOnExport:Boolean;
+		private var _rememberExportPath:Boolean;
+		private var _calledFromConsole:Boolean;
+
+
+
+        private function onClick(event:MouseEvent):void {
+            if (event.target.id == "loadButton") {
+                loadTextureAtlas();
+            }
+            else if (event.target.id == "playSymbolButton") {
+                symbolPreviewer.play();
+            }
+            else if (event.target.id == "stopSymbolButton") {
+                symbolPreviewer.stop();
+            }
+            else if (event.target.id == "swapColorButton") {
+                symbolPreviewer.swapColor();
+            }
+            else if (event.target.id == "exportButton") {
+                onExportButton();
+            }
+			else if (event.target.id == "clearButton") {
+				onClearButton();
 			}
-			else if (event.target.id == "playSymbolButton") {
-				symbolPreviewer.play();
-			}
-			else if (event.target.id == "stopSymbolButton") {
-				symbolPreviewer.stop();
-			}
-			else if (event.target.id == "swapColorButton") {
-				symbolPreviewer.swapColor();
-			}
-			else if (event.target.id == "exportButton") {
-				exportTextureAtlas();
-			}
+        }
+
+		private function onClearButton():void {
+			_mustReloadOnExport = false;
+			clearLoadedList();
 		}
 
-		private function exportTextureAtlas():void{
-			var so:SharedObject = SharedObject.getLocal("lastExportDirectory");
-			var filePicker:File;
-			if (so.size != 0 && so.data.lastExportDirectory != undefined) {
-				filePicker = new File(so.data.lastExportDirectory);
 
-			}
-			if (filePicker == null || !filePicker.exists) {
-				filePicker = File.documentsDirectory;
-			}
-			filePicker.browseForDirectory("Select an export folder");
-			filePicker.addEventListener(Event.SELECT, function(event:Event):void {
-				for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider){
-					textureAtlas.export(filePicker)
+
+		public function exportAtlasList():void{
+			var argCount:int = _atlasList.length;
+			if (argCount != 0) {
+				for (var i:int = 0; i < (argCount); i++) {
+					loadTextureAtlas(_atlasList[i]);
 				}
-				so.data.lastExportDirectory = filePicker.nativePath;
-				Alert.show("Export completed!");
-			});
-		}
-
-		private function loadTextureAtlas() {
-			var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
-			var textureAtlas:TextureAtlas = new TextureAtlas();
-			var filePicker:File;
-			if (so.size != 0 && so.data.lastLoadDirectory != "") {
-				filePicker = new File(so.data.lastLoadDirectory);
-
-			}
-			if (filePicker == null || !filePicker.exists) {
-				filePicker = File.documentsDirectory;
-			}
-
-			var filter:FileFilter = new FileFilter("JSON, SWF/SWC", "*.swf;*.swc;*.json");
-			filePicker.browseForOpenMultiple("Select files", [filter]);
-			filePicker.addEventListener(FileListEvent.SELECT_MULTIPLE, function (event):void {
-				for each (var file:File in event.files) {
-					var textureAtlasArray:Array = TextureAtlas.loadFromFile(file);
-					for each(var textureAtlas:TextureAtlas in textureAtlasArray){
-						textureAtlasList.dataProvider.addItem(textureAtlas);
+				_loadPending = 0;
+				for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
+					if (!textureAtlas.finishedLoading) {
+						textureAtlas.addEventListener(Event.COMPLETE, onAtlasLoadedWaitingExport);
+						_loadPending++;
 					}
 				}
-				var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
-				so.data.lastLoadDirectory = event.files[0].parent.nativePath;
-			});
+			}
 		}
 
-		private function textureAtlasList_changeHandler(event:IndexChangeEvent):void {
-			elementVSwappingList.selectedTextureAtlas = event.target.selectedItem;
+        private function onInvoke(event:InvokeEvent):void {
+			if(event.arguments.length != 0){
+				_calledFromConsole = true;
+				_exportPath = event.arguments.pop();
+				_atlasList = event.arguments;
+				exportAtlasList();
+			}
+
+
+        }
+
+        private function reloadTextureAtlas():void {
+			for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
+				if(_atlasList.indexOf(textureAtlas.loadFile.nativePath) == -1)_atlasList.push(textureAtlas.loadFile.nativePath);
+			}
+			clearLoadedList();
+			exportAtlasList();
+
+        }
+
+		private function clearLoadedList():void {
+			for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
+				textureAtlas.destroy();
+			}
+			textureAtlasList.dataProvider.removeAll();
+			elementVSwappingList.symbolList.dataProvider.removeAll();
+			elementVSwappingList.textureList.dataProvider.removeAll();
+
 		}
-		]]>
+
+		private function onExportButton():void {
+			if(_mustReloadOnExport){
+				reloadTextureAtlas();
+			}
+			else {
+				exportTextureAtlas(_exportPath);
+			}
+			_mustReloadOnExport = true;
+
+		}
+
+        private function exportTextureAtlas(path:String = ""):void {
+			var adError:Boolean = false;
+            if (path == "") {
+                var so:SharedObject = SharedObject.getLocal("lastExportDirectory");
+                var filePicker:File;
+                if (so.size != 0 && so.data.lastExportDirectory != undefined) {
+                    filePicker = new File(so.data.lastExportDirectory);
+
+                }
+                if (filePicker == null || !filePicker.exists) {
+                    filePicker = File.documentsDirectory;
+                }
+                filePicker.browseForDirectory("Select an export folder");
+                filePicker.addEventListener(Event.SELECT, function (event:Event):void {
+                    for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
+							if(_rememberExportPath)_exportPath = filePicker.nativePath;
+                            if(textureAtlas.export(filePicker)){
+                            	Alert.show(textureAtlas.error);
+							   adError = true
+							   break;
+                            }
+                    }
+                    if(!adError){
+                        so.data.lastExportDirectory = filePicker.nativePath;
+                        Alert.show("Export completed!");
+                    }
+
+                });
+            }
+            else {
+                var file:File = new File(path);
+                for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
+                    textureAtlas.export(file)
+					if(textureAtlas.export(file)){
+						Alert.show(textureAtlas.error);
+						adError = true
+						break;
+					}
+                }
+				if(!adError && ! _calledFromConsole){
+					Alert.show("Export completed!");
+				}
+            }
+
+
+		}
+
+        private function loadTextureAtlas(path:String = "") {
+            if (path == "") {
+                var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
+                var textureAtlas:TextureAtlas = new TextureAtlas();
+                var filePicker:File;
+                if (so.size != 0 && so.data.lastLoadDirectory != "") {
+                    filePicker = new File(so.data.lastLoadDirectory);
+
+                }
+                if (filePicker == null || !filePicker.exists) {
+                    filePicker = File.documentsDirectory;
+                }
+
+                var filter:FileFilter = new FileFilter("JSON, SWF/SWC", "*.swf;*.swc;*.json");
+                filePicker.browseForOpenMultiple("Select files", [filter]);
+                filePicker.addEventListener(FileListEvent.SELECT_MULTIPLE, function (event):void {
+                    for each (var file:File in event.files) {
+                        var textureAtlasArray:Array = TextureAtlas.loadFromFile(file);
+                        for each(var textureAtlas:TextureAtlas in textureAtlasArray) {
+                            textureAtlasList.dataProvider.addItem(textureAtlas);
+							textureAtlas.addEventListener(Event.COMPLETE, onAtlasLoaded);
+							_loadPending++;
+                        }
+                    }
+                    if(_loadPending)exportButton.enabled = false;
+                    var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
+                    so.data.lastLoadDirectory = event.files[0].parent.nativePath;
+                });
+            }
+            else {
+                var file:File = new File(path);
+                var textureAtlasArray:Array = TextureAtlas.loadFromFile(file);
+                for each(var textureAtlas:TextureAtlas in textureAtlasArray) {
+                    textureAtlasList.dataProvider.addItem(textureAtlas);
+                }
+            }
+        }
+
+        private function textureAtlasList_changeHandler(event:IndexChangeEvent):void {
+            elementVSwappingList.selectedTextureAtlas = event.target.selectedItem;
+        }
+
+        private function creationCompleteHandler(event:FlexEvent):void {
+            NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
+			_exportPath = "";
+
+			_mustReloadOnExport = false;
+			_rememberExportPath = true;
+			_calledFromConsole = false;
+        }
+
+		private function onAtlasLoaded(event:Event):void {
+			_loadPending--;
+			if(_loadPending == 0){
+				exportButton.enabled = true;
+			}
+		}
+
+        private function onAtlasLoadedWaitingExport(event:Event):void {
+            _loadPending--;
+            if(_loadPending == 0){
+                exportTextureAtlas(_exportPath);
+                if(_calledFromConsole){
+					NativeApplication.nativeApplication.exit();
+				}
+            }
+        }
+        ]]>
 
 	</fx:Script>
 
 	<s:VGroup width="100%" height="100%"  paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
 		<s:HGroup>
 			<s:Button id="loadButton" label="Load SWF/JSON" click="onClick(event)" />
+			<s:Button id="clearButton" label="Clear" click="onClick(event)" />
+
 		</s:HGroup>
 		<s:HGroup width="100%" height="100%">
 			<s:VGroup width="100%" height="100%">

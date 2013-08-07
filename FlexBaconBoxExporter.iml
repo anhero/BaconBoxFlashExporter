@@ -4,7 +4,12 @@
     <configurations>
       <configuration name="testFlexExporter" target-platform="Desktop" main-class="FlexBaconBoxExporter" output-file="TestFlexExporter.swf" output-folder="$MODULE_DIR$/out/production/testFlexExporter">
         <dependencies target-player="11.6">
-          <sdk name="flex _air36" />
+          <entries>
+            <entry library-name="blooddy_crypto" library-level="project">
+              <dependency linkage="Merged" />
+            </entry>
+          </entries>
+          <sdk name="flex4_9" />
         </dependencies>
         <compiler-options>
           <map>
@@ -23,8 +28,9 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="flex _air36" jdkType="Flex SDK Type (new)" />
+    <orderEntry type="jdk" jdkName="flex4_9" jdkType="Flex SDK Type (new)" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="blooddy_crypto" level="project" />
   </component>
 </module>
 

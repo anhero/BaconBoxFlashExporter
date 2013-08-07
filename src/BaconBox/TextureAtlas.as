@@ -9,6 +9,8 @@ package BaconBox {
 import BaconBox.TexturePacker.TextureInfo;
 import BaconBox.TexturePacker.TexturePacker;
 
+import flash.desktop.NativeApplication;
+
 import flash.display.Loader;
 import flash.display.MovieClip;
 import flash.display.Sprite;
@@ -30,6 +32,7 @@ import mx.utils.ObjectProxy;
 public class TextureAtlas extends EventDispatcher {
 	private var _name:String = new String();
 	private var _file:File;
+	private var _loadFile:File;
 	private var _fileProxy:ObjectProxy;
 	private var _scale:Number;
 	private var _width:int;
@@ -39,12 +42,19 @@ public class TextureAtlas extends EventDispatcher {
 	private var _textureHash:Dictionary = new Dictionary();
 	private var _opaqueTextures:Array = new Array();
 	private var _symbolHash:Dictionary = new Dictionary();
+	private var _error:String;
 
+    private var _finishedLoading:Boolean;
 	public function TextureAtlas() {
 		_name = "Unnamed";
 		_width = 2048;
 		_height = 2048;
 		_scale = 1;
+        _finishedLoading = false;
+	}
+
+	public function destroy():void{
+		if(_loader)_loader.unload();
 	}
 
 	public static function loadFromFile(file:File): Array {
@@ -66,6 +76,7 @@ public class TextureAtlas extends EventDispatcher {
 		var jsonObject:Object = JSON.parse(jsonData);
 		for each(var textureName:String in jsonObject.textureNames){
 			var textureAtlas:TextureAtlas = new TextureAtlas();
+			textureAtlas._loadFile = file;
 			textureAtlas.name = textureName;
 			var textureAtlasJson:Object = jsonObject[textureName];
 			for each(var key:String in textureAtlasJson["textures"]){
@@ -78,7 +89,13 @@ public class TextureAtlas extends EventDispatcher {
 			for each(var key:String in textureAtlasJson["symbols"]){
 				textureAtlas.symbolHash.setValue(key, null);
 			}
-			textureAtlas.localLoadFromSWF(new File(jsonObject.swfName));
+            var swffile:File = new File((file.nativePath.substr(0, file.nativePath..lastIndexOf('.'))) + ".swf");
+            if(swffile.exists){
+                textureAtlas.localLoadFromSWF(swffile);
+            }
+            else{
+                textureAtlas.localLoadFromSWF(new File(jsonObject.swfName));
+            }
 			textureAtlasArray.push(textureAtlas);
 		}
 		return textureAtlasArray;
@@ -87,6 +104,7 @@ public class TextureAtlas extends EventDispatcher {
 	private static function loadFromSWF(file:File):TextureAtlas{
 		var textureAtlas:TextureAtlas = new TextureAtlas();
 		textureAtlas._name = file.name.split('.')[0];
+		textureAtlas._loadFile = file;
 		textureAtlas.localLoadFromSWF(file);
 		return textureAtlas;
 	}
@@ -107,6 +125,8 @@ public class TextureAtlas extends EventDispatcher {
 					for each(var className:String in classNames){
 						pushClassDef(_appDomain.getDefinition(className));
 					}
+                    _finishedLoading = true;
+                    dispatchEvent(event);
 				});
 	}
 
@@ -129,17 +149,26 @@ public class TextureAtlas extends EventDispatcher {
 		}
 	}
 
-	public function export(exportPath:File):void {
-		var texturePacker:TexturePacker = new TexturePacker(name, width, height);
-		var textures:Vector.<TextureInfo> = new Vector.<TextureInfo>;
-		for each (var element:Object in textureHash.internalDictionary){
-			var textureInfo = element.getTextureInfo(_scale);
-			textures.push(textureInfo);
-		}
-		texturePacker.packTextures(textures);
-		texturePacker.savePNG(exportPath);
+	public function export(exportPath:File):Boolean {
+		try{
+			var texturePacker:TexturePacker = new TexturePacker(name, width, height);
+			var textures:Vector.<TextureInfo> = new Vector.<TextureInfo>;
+			for each (var element:Object in textureHash.internalDictionary){
+				var textureInfo = element.getTextureInfo(_scale);
+				textures.push(textureInfo);
+			}
+			texturePacker.packTextures(textures);
+			texturePacker.savePNG(exportPath);
 
-		saveXML(exportPath, texturePacker);
+			saveXML(exportPath, texturePacker);
+		}
+		catch(err:Error){
+
+			_error = "Error exporting texture named: " + name + " Error: " + err.message;
+			return true;
+		}
+		return false;
+
 	}
 
 	public function saveXML(exportPath:File, texturePacker:TexturePacker):void{
@@ -237,6 +266,18 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function set opaqueTextures(value:Array):void {
 		_opaqueTextures = value;
+	}
+
+    public function get finishedLoading():Boolean {
+        return _finishedLoading;
+    }
+
+	public function get error():String {
+		return _error;
+	}
+
+	public function get loadFile():File {
+		return _loadFile;
 	}
 }
 }
