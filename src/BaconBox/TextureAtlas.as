@@ -146,7 +146,7 @@ public class TextureAtlas extends EventDispatcher {
 		}
 		if(shortClassName != "EntityHolderMovieClip" && shortClassName != "EntityHolderTextField" ){
 			if(object is MovieClip || object is Sprite){
-				if(_symbolHash.isEmpty() || _textureHash.contains(className)){
+				if((_symbolHash.isEmpty() && !_loadedFromJson) || _textureHash.contains(className)){
 					_textureHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef, (_opaqueTextures.indexOf(className) == -1 ))));
 				}
 				else if(_symbolHash.contains(className)){
