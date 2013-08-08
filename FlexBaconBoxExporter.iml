@@ -16,7 +16,7 @@
             <entry key="compiler.keep-generated-actionscript" value="false" />
           </map>
         </compiler-options>
-        <packaging-air-desktop package-file-name="TestFlexExporter" />
+        <packaging-air-desktop package-file-name="BaconBoxExporter" />
         <packaging-android />
         <packaging-ios />
       </configuration>
