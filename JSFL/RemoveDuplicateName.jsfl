@@ -26,19 +26,23 @@ function counter(){
     }
 }
 
+
+function getShortName(name){
+    return (name.substr(name.lastIndexOf('/') + 1));
+}
 function removeDuplicateName(item, index, items, context){
-    if(nameCache.indexOf(item.shortName.toLowerCase()) == -1){
-        nameCache.push(item.shortName.toLowerCase())
+    if(nameCache.indexOf(getShortName(item.name).toLowerCase()) == -1){
+        nameCache.push(getShortName(item.name).toLowerCase())
     }
     else{
         var newName;
         do{
-             newName = item.shortName +"_"+ getID();
+             newName = getShortName(item.name) +"_"+ getID();
              
         }while(nameCache.indexOf(newName.toLowerCase()) != -1)
         
         item.name = newName.toLowerCase();
-        nameCache.push(item.shortName);
+        nameCache.push(getShortName(item.name));
     }
        
 

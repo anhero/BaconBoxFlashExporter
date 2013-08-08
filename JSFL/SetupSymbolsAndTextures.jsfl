@@ -1,6 +1,8 @@
 xjsfl.init(this);
 clear();
 
+fl.showIdleMessage(false);
+
 var getID = counter();
 var linkageID = counter();
 var newSymbolName ="symbol"
@@ -15,6 +17,8 @@ Iterators.items(textureItems, itemLinkageCallback, null, null, null);
 
 
 Superdoc.selection.select.none();
+fl.showIdleMessage(true);
+
 alert("Completed");
 
 
@@ -26,6 +30,17 @@ function counter(){
     }
 }
 
+function getMethodsAndAttribute(obj) {
+  var result = [];
+  for (var id in obj) {
+    try {
+        result.push(id + ": " + obj[id].toString());
+    } catch (err) {
+      result.push(id + ": inaccessible");
+    }
+  }
+  return result;
+}
 
 function getSymbolName(prefix){
     var name;
@@ -38,7 +53,7 @@ function getSymbolName(prefix){
 
 
 function getShortName(name){
-    return (name.substr(name.lastIndexOf('/') + 1));
+    return name.substr(name.lastIndexOf('/') + 1);
 }
 
 function PutToAZ(s){
@@ -77,7 +92,7 @@ function elementSymbolConvertCallback(element, index, elements, context)
         
         context.layer.locked=  false;
          if(element.elementType == "shape" || element.elementType == "instance" && element.libraryItem.itemType == "bitmap") {
-             var currentSymbolName = getSymbolName(getShortName(context.item.name) + '_');
+             var currentSymbolName = PutToAZ(getSymbolName(getShortName(context.item.name) + '_'));
              fl.getDocumentDOM().selectNone();
              context.select();
              if(fl.getDocumentDOM().selection.length <= 0) return;
@@ -99,12 +114,14 @@ function elementSymbolConvertCallback(element, index, elements, context)
     
          else if(element.elementType == "text"){
              if(context.item.linkageBaseClass == newEntityTextFieldaseClassName) return;
+             element.textType = "dynamic";
+
              var currentSymbolName = getSymbolName(getShortName(context.item.name) + '_');
              fl.getDocumentDOM().selectNone();
              context.select();
              if(fl.getDocumentDOM().selection.length <= 0) return;
+             var tfName = element.name;
              element.name = "text"
-             
              var newMc =  Superdoc.selection.edit.convertToSymbol("movie clip", currentSymbolName, "top left");
              var itemName = context.item.name;
              var posSymbol = itemName.lastIndexOf("Symbol/");
@@ -116,11 +133,17 @@ function elementSymbolConvertCallback(element, index, elements, context)
              newMc.linkageClassName = currentSymbolName;
              newMc.linkageBaseClass = newEntityTextFieldaseClassName;
              newMc.linkageExportInFirstFrame = true;
-             
+
+             var contextElements = context.frame.elements;
+             for(var i = 0; i < contextElements.length; i++){
+                if(contextElements[i].libraryItem.name.split("/").pop() == currentSymbolName){
+                    contextElements[i].name = tfName;
+                }
+             }
+           
              
          }
          else{
-             
          }
 }
  
