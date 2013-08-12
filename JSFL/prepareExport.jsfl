@@ -32,7 +32,6 @@ var pathToAirExporter = 'start /B /D"C:\\Program Files (x86)\\BaconBoxTexturePac
 //FLfile.runCommandLine(pathToAirExporter + " " + jsonFilePath + " 1");
 
 
-alert("Done");
 /////////////////////////////////////////////////////
 
 function getPublishingName(){
@@ -51,8 +50,11 @@ function getFullSWFPath(swfPath) {
         if( docPath.charAt(1) == ':'){
             directorySeparator = '\\'; 
         }
-    
-        return docPath.substring(0, docPath.lastIndexOf(directorySeparator)) + directorySeparator + swfPath;
+        var pathToSWF = docPath.substring(0, docPath.lastIndexOf(directorySeparator))
+        if(Superdoc.file.properties.path.split('.').pop() == "xfl"){
+            pathToSWF += directorySeparator + "..";
+        }
+        return  pathToSWF + directorySeparator + swfPath;
     }
 }
 

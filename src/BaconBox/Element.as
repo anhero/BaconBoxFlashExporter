@@ -178,6 +178,7 @@ public class Element {
 					var child:DisplayObject = symbol.getChildAt(childIndex);
 					childXML.@name = child.name;
 					childXML.@className = getQualifiedClassName(child).replace("::", ".");
+					if(childXML.@className == "flash.display.Shape") throw Error("Found a flash.display.Shape in the children of " + xml.@className);
 					var m:Matrix = child.transform.matrix;
 					childXML.@a = m.a;
 					childXML.@b = m.b;
