@@ -136,7 +136,7 @@ function elementSymbolConvertCallback(element, index, elements, context)
 
              var contextElements = context.frame.elements;
              for(var i = 0; i < contextElements.length; i++){
-                if(contextElements[i].libraryItem.name.split("/").pop() == currentSymbolName){
+                if(contextElements[i].libraryItem && contextElements[i].libraryItem.name.split("/").pop() == currentSymbolName){
                     contextElements[i].name = tfName;
                 }
              }
