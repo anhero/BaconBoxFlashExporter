@@ -89,8 +89,8 @@ function elementSymbolConvertCallback(element, index, elements, context)
 {
     
         if(context.layer.layerType != "normal" || context.item.linkageBaseClass == newEntityTextFieldaseClassName) return;
-        
-        context.layer.locked=  false;
+        context.layer.visible =  true;
+        context.layer.locked =  false;
          if(element.elementType == "shape" || element.elementType == "instance" && element.libraryItem.itemType == "bitmap") {
              var currentSymbolName = PutToAZ(getSymbolName(getShortName(context.item.name) + '_'));
              fl.getDocumentDOM().selectNone();
