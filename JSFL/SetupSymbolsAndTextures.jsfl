@@ -73,7 +73,7 @@ function PutToAZ(s){
 function itemLinkageCallback(item, index, items, context){
         if(! item.linkageExportForAS || ! (item.linkageBaseClass == newEntityBaseClassName || item.linkageBaseClass == newEntityTextFieldaseClassName)){
             item.linkageExportForAS = true;
-            var name = getShortName(item.name);
+            var name = PutToAZ(getShortName(item.name));
             item.linkageClassName = PutToAZ(name);
 
             item.linkageBaseClass = newEntityBaseClassName;
@@ -114,9 +114,12 @@ function elementSymbolConvertCallback(element, index, elements, context)
     
          else if(element.elementType == "text"){
              if(context.item.linkageBaseClass == newEntityTextFieldaseClassName) return;
-             element.textType = "dynamic";
+             if(element.textType != "dynamic"){
+                element.textType = "dynamic"; 
+                element.name = "";
+             }
 
-             var currentSymbolName = getSymbolName(getShortName(context.item.name) + '_');
+             var currentSymbolName = PutToAZ(getSymbolName(getShortName(context.item.name) + '_'));
              fl.getDocumentDOM().selectNone();
              context.select();
              if(fl.getDocumentDOM().selection.length <= 0) return;
