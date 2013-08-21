@@ -4,7 +4,10 @@ clear();
 fl.showIdleMessage(false);
 
 var getID = counter();
-var linkageID = counter();
+
+var getTextureLinkID = counter();
+var getSymbolLinkID = counter();
+
 var newSymbolName ="symbol"
 var newEntityBaseClassName = "BaconBox.EntityWrapper.EntityHolderMovieClip"
 var newEntityTextFieldaseClassName = "BaconBox.EntityWrapper.EntityHolderTextField"
@@ -12,8 +15,8 @@ var newEntityTextFieldaseClassName = "BaconBox.EntityWrapper.EntityHolderTextFie
 var symbolItems = $$('/*/Symbol/*:movieclip:selected').elements
 var textureItems = $$('/*/Texture/*:movieclip:selected').elements;
 
-Iterators.items(symbolItems, itemLinkageCallback, null, null, elementSymbolConvertCallback);
-Iterators.items(textureItems, itemLinkageCallback, null, null, null);
+Iterators.items(symbolItems, symbolLinkageNameCallback, null, null, elementSymbolConvertCallback);
+Iterators.items(textureItems, textureLinkageNameCallback, null, null, null);
 
 
 Superdoc.selection.select.none();
@@ -69,20 +72,39 @@ function PutToAZ(s){
  return s;
 }
 
+function getLinkageName(isSymbol){
+    var suffix;
+    if(isSymbol){
+        suffix = '_SYMBOL_'+ getSymbolLinkID();
+    }
+    else{
+        suffix = '_TEXTURE_'+ getTextureLinkID();
+    }
+    return PutToAZ(Superdoc.file.properties.name.split('.')[0] + suffix).toUpperCase();
+}
 
-function itemLinkageCallback(item, index, items, context){
+function textureLinkageNameCallback(item, index, items, context){
         if(! item.linkageExportForAS || ! (item.linkageBaseClass == newEntityBaseClassName || item.linkageBaseClass == newEntityTextFieldaseClassName)){
             item.linkageExportForAS = true;
-            var name = PutToAZ(getShortName(item.name));
-            item.linkageClassName = PutToAZ(name);
+            item.linkageClassName = getLinkageName(false)
+
+            item.linkageBaseClass = newEntityBaseClassName;
+            item.linkageExportInFirstFrame = true;
+        }
+}
+
+function symbolLinkageNameCallback(item, index, items, context){
+        if(! item.linkageExportForAS || ! (item.linkageBaseClass == newEntityBaseClassName || item.linkageBaseClass == newEntityTextFieldaseClassName)){
+            item.linkageExportForAS = true;
+            item.linkageClassName = getLinkageName(true)
 
             item.linkageBaseClass = newEntityBaseClassName;
             item.linkageExportInFirstFrame = true;
 
 
         }
-    }
-  
+}
+
 
 
 function elementSymbolConvertCallback(element, index, elements, context)

@@ -10,8 +10,3 @@ var texturename = prompt("Enter texture name.", Superdoc.file.properties.name.sp
 	fl.getDocumentDOM().library.newFolder(texturename + "/Texture/Opaque");
 }
 
-function getPublishingName(){
-    var profile = new PublishProfile();
-    profile.load();
-    return  getFullSWFPath(profile.file.flashPath); 
-}
