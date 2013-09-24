@@ -83,7 +83,7 @@ public class TextureAtlas extends EventDispatcher {
 			textureAtlas._loadFile = file;
 			textureAtlas.name = textureName;
 			textureAtlas._loadedFromJson = true;
-			var textureAtlasJson:Object = jsonObject[textureName];
+			var textureAtlasJson:Object = jsonObject.textureAtlas[textureName];
 			if(textureAtlasJson.width)textureAtlas.width  = textureAtlasJson.width;
 			if(textureAtlasJson.height)textureAtlas.height  = textureAtlasJson.height;
 			for each(var key:String in textureAtlasJson["textures"]){
@@ -221,7 +221,7 @@ public class TextureAtlas extends EventDispatcher {
 			fileStream.open(_loadFile, FileMode.READ);
 			var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
 			var jsonObject:Object = JSON.parse(jsonData);
-			var textureAtlasJson:Object = jsonObject[_name];
+			var textureAtlasJson:Object = jsonObject.textureAtlas[_name];
 			textureAtlasJson.width = value;
 			fileStream.close();
 			fileStream.open(_loadFile, FileMode.WRITE);
@@ -242,7 +242,7 @@ public class TextureAtlas extends EventDispatcher {
 			fileStream.open(_loadFile, FileMode.READ);
 			var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
 			var jsonObject:Object = JSON.parse(jsonData);
-			var textureAtlasJson:Object = jsonObject[_name];
+			var textureAtlasJson:Object = jsonObject.textureAtlas[_name];
 			textureAtlasJson.height = value;
 			fileStream.close();
 			fileStream.open(_loadFile, FileMode.WRITE);
