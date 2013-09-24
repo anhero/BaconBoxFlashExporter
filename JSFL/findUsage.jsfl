@@ -1,5 +1,6 @@
 xjsfl.init(this);
 clear();
+fl.showIdleMessage(false);
 
 var items = $$(':selected').elements
 
@@ -9,6 +10,7 @@ Iterators.items($$(':symbol').elements, null, null, null, elementCB);
 
 trace(elementList.join(';'));
 if(elementList.length == 0) trace("No instance found.");
+fl.showIdleMessage(true);
 
 function getMethodsAndAttribute(obj) {
   var result = [];
@@ -36,10 +38,13 @@ function getMethods(obj) {
   return result;
 }
 
+function getShortName(name){
+    return name.substr(name.lastIndexOf('/') + 1);
+}
 function elementCB(element, index, elements, context){
-    if(element.libraryItem.linkageClassName == items[0].linkageClassName) {
+    if(element && element.libraryItem && element.libraryItem.linkageClassName == items[0].linkageClassName) {
       
-        trace(context.item.shortName  + " -- " + element.libraryItem.shortName);
-        if(elementList.indexOf(element.libraryItem.shortName) == -1)elementList.push(element.libraryItem.shortName);
+        trace(getShortName(context.item.name)  + " -- " + getShortName(element.libraryItem.name));
+        if(elementList.indexOf(getShortName(element.libraryItem.name)) == -1)elementList.push(getShortName(element.libraryItem.name));
     }
 }
