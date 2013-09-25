@@ -89,6 +89,10 @@ Superdoc.file.publish();
 //FLfile.runCommandLine(pathToAirExporter + " " + jsonFilePath + " 1");
 
 
+
+alert("Completed");
+
+
 /////////////////////////////////////////////////////
 
 function getPublishingName(){
