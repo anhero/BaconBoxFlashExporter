@@ -193,8 +193,17 @@ public class TextureAtlas extends EventDispatcher {
 			textureXML.appendChild(subtextureXML);
 		}
 
+		var translationsXML = <translations></translations>;
+
 		for each (var element:Object in symbolHash.internalDictionary){
-			symbolsXML.appendChild(element.getSymbolXML())
+			var elementXML:XML = element.getSymbolXML();
+			if(elementXML.@textfield == true){
+				var translationXML = <translation></translation>;
+				translationXML.@key = elementXML.@className;
+				translationXML.@text = elementXML.@text;
+				translationsXML.appendChild(translationXML);
+			}
+			symbolsXML.appendChild(elementXML);
 		}
 
 
@@ -202,6 +211,13 @@ public class TextureAtlas extends EventDispatcher {
 		fs.open(exportPath.resolvePath("./" + _name + ".xml"), FileMode.WRITE);
 		fs.writeUTFBytes(textureSheetXML);
 		fs.close();
+		if(translationsXML.children().length()){
+			fs.open(exportPath.resolvePath("./" + _name + "_TRANSLATION_DEFAULT.xml"), FileMode.WRITE);
+			fs.writeUTFBytes(translationsXML);
+			fs.close();
+		}
+
+
 	}
 
 	public function get name():String {
