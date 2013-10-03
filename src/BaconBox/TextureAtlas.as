@@ -86,6 +86,8 @@ public class TextureAtlas extends EventDispatcher {
 			var textureAtlasJson:Object = jsonObject.textureAtlas[textureName];
 			if(textureAtlasJson.width)textureAtlas.width  = textureAtlasJson.width;
 			if(textureAtlasJson.height)textureAtlas.height  = textureAtlasJson.height;
+			if(textureAtlasJson.scale)textureAtlas.scale  = textureAtlasJson.scale;
+
 			for each(var key:String in textureAtlasJson["textures"]){
 				textureAtlas.textureHash.setValue(key, null);
 			}
@@ -184,7 +186,7 @@ public class TextureAtlas extends EventDispatcher {
 		var textureXML:XML =<Texture></Texture>;
 		textureXML.@name= _name;
 		textureXML.@path= _name + ".png";
-
+		textureXML.@scale = _scale;
 		textureSheetXML.appendChild(textureXML);
 		textureSheetXML.appendChild(symbolsXML);
 
@@ -274,6 +276,18 @@ public class TextureAtlas extends EventDispatcher {
 	}
 
 	public function set scale(value:Number):void {
+		if(_loadedFromJson){
+			var fileStream:FileStream = new FileStream();
+			fileStream.open(_loadFile, FileMode.READ);
+			var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+			var jsonObject:Object = JSON.parse(jsonData);
+			var textureAtlasJson:Object = jsonObject.textureAtlas[_name];
+			textureAtlasJson.scale = value;
+			fileStream.close();
+			fileStream.open(_loadFile, FileMode.WRITE);
+			fileStream.writeUTFBytes(JSON.stringify(jsonObject));
+			fileStream.close();
+		}
 		_scale = value;
 	}
 
