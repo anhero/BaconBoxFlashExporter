@@ -1,10 +1,9 @@
 <?xml version="1.0"?>
-<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:BB="BaconBox.*" width="800" height="600" creationComplete="creationCompleteHandler(event)">
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:BB="BaconBox.*" width="500" height="300" creationComplete="creationCompleteHandler(event)">
 	<fx:Style source="./spark_graphite.css"/>
 
 	<fx:Script><![CDATA[
         import BaconBox.TextureAtlas;
-        import BaconBox.VSwappingSWFElementRenderer;
 
         import mx.controls.Alert;
         import mx.events.FlexEvent;
@@ -12,27 +11,16 @@
 
         import spark.events.IndexChangeEvent;
 
-        private var _loadPending:int;
         private var _atlasList:Array = new Array();
         private var _exportPath:String;
-		private var _mustReloadOnExport:Boolean;
 		private var _rememberExportPath:Boolean;
 		private var _calledFromConsole:Boolean;
-
+		private var _atlasIterator:int;
 
 
         private function onClick(event:MouseEvent):void {
             if (event.target.id == "loadButton") {
-                loadTextureAtlas();
-            }
-            else if (event.target.id == "playSymbolButton") {
-                symbolPreviewer.play();
-            }
-            else if (event.target.id == "stopSymbolButton") {
-                symbolPreviewer.stop();
-            }
-            else if (event.target.id == "swapColorButton") {
-                symbolPreviewer.swapColor();
+                onLoadButton();
             }
             else if (event.target.id == "exportButton") {
                 onExportButton();
@@ -40,41 +28,35 @@
 			else if (event.target.id == "clearButton") {
 				onClearButton();
 			}
+			else if( event.target.id == "forgetPathButton"){
+//				_rememberExportPath = false;
+				_exportPath = ""
+			}
         }
 
 		private function onClearButton():void {
-			_mustReloadOnExport = false;
+
 			clearLoadedList();
 		}
 
 
-
-		public function exportAtlasList():void{
-			var argCount:int = _atlasList.length;
-			if (argCount != 0) {
-				for (var i:int = 0; i < (argCount); i++) {
-					loadTextureAtlas(_atlasList[i]);
-				}
-				_loadPending = 0;
-				for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
-					if (!textureAtlas.finishedLoading) {
-						textureAtlas.addEventListener(Event.COMPLETE, onAtlasLoadedWaitingExport);
-						_loadPending++;
-					}
-				}
-			}
-		}
 
         private function onInvoke(event:InvokeEvent):void {
 			if(event.arguments.length != 0){
 				_calledFromConsole = true;
 				_exportPath = event.arguments.pop();
 				_atlasList = event.arguments;
-				exportAtlasList();
+				onExportButton();
 			}
 
 
         }
+
+		private function loadAtlasList(){
+			for each(var path:String in _atlasList) {
+				loadTextureAtlas(new File(path));
+			}
+		}
 
         private function reloadTextureAtlas():void {
 			_atlasList = new Array();
@@ -82,8 +64,7 @@
 				if(_atlasList.indexOf(textureAtlas.loadFile.nativePath) == -1)_atlasList.push(textureAtlas.loadFile.nativePath);
 			}
 			clearLoadedList();
-			exportAtlasList();
-
+			loadAtlasList();
         }
 
 		private function clearLoadedList():void {
@@ -91,24 +72,44 @@
 				textureAtlas.destroy();
 			}
 			textureAtlasList.dataProvider.removeAll();
-			elementVSwappingList.symbolList.dataProvider.removeAll();
-			elementVSwappingList.textureList.dataProvider.removeAll();
-
 		}
 
 		private function onExportButton():void {
-			if(_mustReloadOnExport){
+			_atlasIterator = 0;
+			_atlasList = new Array();
+			for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
+				if(_atlasList.indexOf(textureAtlas.loadFile.nativePath) == -1)_atlasList.push(textureAtlas.loadFile.nativePath);
+			}
+			exportTextureAtlas(_exportPath)
+		}
+
+		private function exportNextAtlas(iterator:int):void {
+			if(iterator >= textureAtlasList.dataProvider.length){
+				textureAtlasList.dataProvider[textureAtlasList.dataProvider.length - 1].unload();
+				exportButton.enabled = true;
+				_atlasIterator = 0;
 				reloadTextureAtlas();
+				if(!_calledFromConsole) Alert.show('Done!');
+
 			}
-			else {
-				exportTextureAtlas(_exportPath);
+			else{
+				exportButton.enabled = false;
+				if(iterator - 1 >= 0) textureAtlasList.dataProvider[iterator - 1].unload();
+				var atlas = textureAtlasList.dataProvider[iterator];
+					atlas.export(new File(_exportPath), function(success){if(success){
+						exportNextAtlas(iterator + 1)
+					}
+					else{
+						exportButton.enabled = true;
+						Alert.show(atlas.error);
+					}});
+				_atlasIterator++;
 			}
-			_mustReloadOnExport = true;
 
 		}
 
         private function exportTextureAtlas(path:String = ""):void {
-			var adError:Boolean = false;
+			var hadError:Boolean = false;
             if (path == "") {
                 var so:SharedObject = SharedObject.getLocal("lastExportDirectory");
                 var filePicker:File;
@@ -121,41 +122,21 @@
                 }
                 filePicker.browseForDirectory("Select an export folder");
                 filePicker.addEventListener(Event.SELECT, function (event:Event):void {
-                    for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
-							if(_rememberExportPath)_exportPath = filePicker.nativePath;
-                            if(textureAtlas.export(filePicker)){
-                            	Alert.show(textureAtlas.error);
-							   adError = true
-							   break;
-                            }
-                    }
-                    if(!adError){
-                        so.data.lastExportDirectory = filePicker.nativePath;
-                        Alert.show("Export completed!");
-                    }
-
-                });
+					_exportPath = filePicker.nativePath;
+					so.data.lastExportDirectory = filePicker.nativePath;
+					exportNextAtlas(_atlasIterator);
+				});
             }
+
             else {
-                var file:File = new File(path);
-                for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
-                    textureAtlas.export(file)
-					if(textureAtlas.export(file)){
-						Alert.show(textureAtlas.error);
-						adError = true
-						break;
-					}
-                }
-				if(!adError && ! _calledFromConsole){
-					Alert.show("Export completed!");
-				}
+				_exportPath = path;
+				exportNextAtlas(_atlasIterator);
             }
 
 
 		}
 
-        private function loadTextureAtlas(path:String = "") {
-            if (path == "") {
+        private function onLoadButton() {
                 var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
                 var textureAtlas:TextureAtlas = new TextureAtlas();
                 var filePicker:File;
@@ -167,59 +148,31 @@
                     filePicker = File.documentsDirectory;
                 }
 
-                var filter:FileFilter = new FileFilter("JSON, SWF/SWC", "*.swf;*.swc;*.json");
+                var filter:FileFilter = new FileFilter("JSON", "*.json");
                 filePicker.browseForOpenMultiple("Select files", [filter]);
                 filePicker.addEventListener(FileListEvent.SELECT_MULTIPLE, function (event):void {
                     for each (var file:File in event.files) {
-                        var textureAtlasArray:Array = TextureAtlas.loadFromFile(file);
-                        for each(var textureAtlas:TextureAtlas in textureAtlasArray) {
-                            textureAtlasList.dataProvider.addItem(textureAtlas);
-							textureAtlas.addEventListener(Event.COMPLETE, onAtlasLoaded);
-							_loadPending++;
-                        }
+						loadTextureAtlas(file);
                     }
-                    if(_loadPending)exportButton.enabled = false;
                     var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
                     so.data.lastLoadDirectory = event.files[0].parent.nativePath;
                 });
-            }
-            else {
-                var file:File = new File(path);
-                var textureAtlasArray:Array = TextureAtlas.loadFromFile(file);
-                for each(var textureAtlas:TextureAtlas in textureAtlasArray) {
-                    textureAtlasList.dataProvider.addItem(textureAtlas);
-                }
-            }
         }
 
-        private function textureAtlasList_changeHandler(event:IndexChangeEvent):void {
-            elementVSwappingList.selectedTextureAtlas = event.target.selectedItem;
+        private function loadTextureAtlas(file:File){
+			var textureAtlasArray:Array = TextureAtlas.loadFromJson(file);
+			for each(var textureAtlas:TextureAtlas in textureAtlasArray) {
+				textureAtlasList.dataProvider.addItem(textureAtlas);
+			}
         }
+
 
         private function creationCompleteHandler(event:FlexEvent):void {
             NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
 			_exportPath = "";
 
-			_mustReloadOnExport = false;
 			_rememberExportPath = true;
 			_calledFromConsole = false;
-        }
-
-		private function onAtlasLoaded(event:Event):void {
-			_loadPending--;
-			if(_loadPending == 0){
-				exportButton.enabled = true;
-			}
-		}
-
-        private function onAtlasLoadedWaitingExport(event:Event):void {
-            _loadPending--;
-            if(_loadPending == 0){
-                exportTextureAtlas(_exportPath);
-                if(_calledFromConsole){
-					NativeApplication.nativeApplication.exit();
-				}
-            }
         }
         ]]>
 
@@ -235,12 +188,12 @@
 			<s:VGroup width="100%" height="100%">
 				<s:VGroup width="100%" height="100%">
 					<s:Label text="Texture atlas" />
-					<s:List  id="textureAtlasList" height="100%" width="100%" change="textureAtlasList_changeHandler(event)">
+					<s:List  id="textureAtlasList" height="100%" width="100%">
 						<s:itemRenderer>
 							<fx:Component>
 							  <s:ItemRenderer>
 								  <s:HGroup paddingLeft="3" paddingRight="3" paddingTop="5" paddingBottom="5" width="100%">
-									  <s:Label text="{data.name}" width="100"/>
+									  <s:Label text="{data.name}" width="100%"/>
 									  <s:Label text="|"/>
 									  <s:Spacer width="100%" />
 									  <s:Label text="{data.fileName}"/>
@@ -255,40 +208,28 @@
 						</s:dataProvider>
 					</s:List>
 				</s:VGroup>
-				<s:VGroup>
+				<s:VGroup width="100%">
 					<s:HGroup width="100%">
 						<s:Label text="Texture name" />
 						<s:TextInput width="100%" text="{textureAtlasList.selectedItem.name}" change="textureAtlasList.selectedItem.name = event.target.text"/>
 					</s:HGroup>
 
-				<s:HGroup>
-					<s:Label text="Scale" />
-					<s:TextInput id="scaleInput" widthInChars="4" text="{textureAtlasList.selectedItem.scale}" change="textureAtlasList.selectedItem.scale = event.target.text" />
-					<s:Label text="Width" />
-					<s:TextInput id="widthInput" widthInChars="4" text="{textureAtlasList.selectedItem.width}" change="textureAtlasList.selectedItem.width = event.target.text" />
-					<s:Label text="Height" />
-					<s:TextInput id="heighInput" widthInChars="4" text="{textureAtlasList.selectedItem.height}" change="textureAtlasList.selectedItem.height = event.target.text" />
-				</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Scale" />
+						<s:TextInput id="scaleInput" widthInChars="4" text="{textureAtlasList.selectedItem.scale}" change="textureAtlasList.selectedItem.scale = event.target.text" />
+						<s:Label text="Width" />
+						<s:TextInput id="widthInput" widthInChars="4" text="{textureAtlasList.selectedItem.width}" change="textureAtlasList.selectedItem.width = event.target.text" />
+						<s:Label text="Height" />
+						<s:TextInput id="heighInput" widthInChars="4" text="{textureAtlasList.selectedItem.height}" change="textureAtlasList.selectedItem.height = event.target.text" />
+					</s:HGroup>
 				</s:VGroup>
 				<s:VGroup width="100%" height="100%">
 					<s:Label text="Preview" />
 					<s:HGroup width="100%" height="100%">
-					<s:VGroup>
-						<s:Button id="playSymbolButton" click="onClick(event)" label="►" width="100" />
-						<s:Button id="stopSymbolButton" label="￭" click="onClick(event)" width="100" />
-						<s:Button id="swapColorButton" label="Swap Color" click="onClick(event)" width="100"/>
-					</s:VGroup>
-					<BB:SymbolPreviewer id="symbolPreviewer" symbol="{elementVSwappingList.lastSelectedDisplayObject}" width="100%" height="100%" />
+						<s:Button id="forgetPathButton" click="onClick(event)" label="Forget path" width="100" />
+						<s:Button id="exportButton" click="onClick(event)" label="Export" width="100" />
 					</s:HGroup>
 				</s:VGroup>
-			</s:VGroup>
-			<s:VGroup width="100%" height="100%" >
-				<BB:VSwappingList id="elementVSwappingList" width="100%" height="100%" />
-				<s:HGroup  width="100%" >
-					<s:Spacer width="100%" />
-					<s:CheckBox id="blendCheckBox" label="Blend" selected="{elementVSwappingList.lastSelectedElement.blend}" enabled="{elementVSwappingList.lastSelectedElement}" change="elementVSwappingList.lastSelectedElement.blend = blendCheckBox.selected" />
-					<s:Button id="exportButton" label="Export" click="onClick(event)" />
-				</s:HGroup>
 			</s:VGroup>
 		</s:HGroup>
 	</s:VGroup>

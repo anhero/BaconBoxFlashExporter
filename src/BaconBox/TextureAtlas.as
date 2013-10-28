@@ -40,12 +40,19 @@ public class TextureAtlas extends EventDispatcher {
 	private var _height:int;
 	private var _loader:Loader = new Loader();
 	private var _appDomain:ApplicationDomain;
-	private var _textureHash:Dictionary = new Dictionary();
+
+
+	private var _textures:Array = new Array();
+	private var _symbols:Array = new Array();
 	private var _opaqueTextures:Array = new Array();
+
+	private var _textureHash:Dictionary = new Dictionary();
 	private var _symbolHash:Dictionary = new Dictionary();
 	private var _error:String;
 
+	private var _exportPath:File;
     private var _finishedLoading:Boolean;
+	private var _exportCallback:Function;
 	public function TextureAtlas() {
 		_name = "Unnamed";
 		_width = 2048;
@@ -59,19 +66,13 @@ public class TextureAtlas extends EventDispatcher {
 		if(_loader)_loader.unload();
 	}
 
-	public static function loadFromFile(file:File): Array {
-		var tempArray:Array;
-		if(file.extension == "json"){
-			tempArray = loadFromJson(file);
-		}
-		else if(file.extension == "swf"){
-			tempArray = new Array();
-			tempArray.push(loadFromSWF(file));
-		}
-		return tempArray;
+	public function unload():void{
+		if(_loader)_loader.unload();
+		_textureHash = new Dictionary();
+		_symbolHash = new Dictionary();
 	}
 
-	private static function loadFromJson(file:File): Array{
+	public static function loadFromJson(file:File): Array{
 		var textureAtlasArray:Array = new Array();
 		var fileStream:FileStream = new FileStream();
 		fileStream.open(file, FileMode.READ);
@@ -89,38 +90,29 @@ public class TextureAtlas extends EventDispatcher {
 			if(textureAtlasJson.scale)textureAtlas.scale  = textureAtlasJson.scale;
 
 			for each(var key:String in textureAtlasJson["textures"]){
-				textureAtlas.textureHash.setValue(key, null);
+				textureAtlas.textures.push(key);
 			}
 			for each(var key:String in textureAtlasJson["opaqueTextures"]){
-				textureAtlas.textureHash.setValue(key, null);
+				textureAtlas.textures.push(key);
 				textureAtlas.opaqueTextures.push(key);
 			}
 			for each(var key:String in textureAtlasJson["symbols"]){
-				textureAtlas.symbolHash.setValue(key, null);
+				textureAtlas.symbols.push(key);
 			}
-            var swffile:File = new File((file.nativePath.substr(0, file.nativePath..lastIndexOf('.'))) + ".swf");
-            if(swffile.exists){
-                textureAtlas.localLoadFromSWF(swffile);
-            }
-            else{
-                textureAtlas.localLoadFromSWF(new File(jsonObject.swfName));
-            }
+			textureAtlas.file = new File((file.nativePath.substr(0, file.nativePath..lastIndexOf('.'))) + ".swf");
+            if(!textureAtlas.file.exists){
+				textureAtlas.file = new File(jsonObject.swfName);
+				if(!textureAtlas.file.exists){
+					throw Error("Can't find the swf associated with this json file: " + file.name);
+				}
+			}
 			textureAtlasArray.push(textureAtlas);
 		}
 		return textureAtlasArray;
 	}
 
-	private static function loadFromSWF(file:File):TextureAtlas{
-		var textureAtlas:TextureAtlas = new TextureAtlas();
-		textureAtlas._name = file.name.split('.')[0];
-		textureAtlas._loadFile = file;
-		textureAtlas.localLoadFromSWF(file);
-		return textureAtlas;
-	}
-
-	private function localLoadFromSWF(file:File):void{
+	private function localLoadFromSWF(file:File, callback:Function):void{
 		_file = file
-		_fileProxy = new ObjectProxy(file);
 		//Should load this stuff with a filestream and Loader.loadBytes.
 		//It would make it easier to load a SWC if we want to support it in the future.
 		//(We could still unzip it in a temp folder, but this would be inelegant and a bit slower).
@@ -135,7 +127,8 @@ public class TextureAtlas extends EventDispatcher {
 						pushClassDef(_appDomain.getDefinition(className));
 					}
                     _finishedLoading = true;
-                    dispatchEvent(event);
+					callback();
+//                    dispatchEvent(event);
 				});
 	}
 
@@ -148,17 +141,17 @@ public class TextureAtlas extends EventDispatcher {
 		}
 		if(shortClassName != "EntityHolderMovieClip" && shortClassName != "EntityHolderTextField" ){
 			if(object is MovieClip || object is Sprite){
-				if((_symbolHash.isEmpty() && !_loadedFromJson) || _textureHash.contains(className)){
+				if((_symbols.length == 0 && !_loadedFromJson) || _textures.indexOf(className) != -1 ){
 					_textureHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef, (_opaqueTextures.indexOf(className) == -1 ))));
 				}
-				else if(_symbolHash.contains(className)){
+				else if(_symbols.indexOf(className)  != -1 ){
 					_symbolHash.setValue(className, new ObjectProxy(new Element(className, shortClassName, classDef)));
 				}
 			}
 		}
 	}
 
-	public function export(exportPath:File):Boolean {
+	private function exportCallback():void{
 		try{
 			var texturePacker:TexturePacker = new TexturePacker(name, width, height);
 			var textures:Vector.<TextureInfo> = new Vector.<TextureInfo>;
@@ -167,16 +160,22 @@ public class TextureAtlas extends EventDispatcher {
 				textures.push(textureInfo);
 			}
 			texturePacker.packTextures(textures);
-			texturePacker.savePNG(exportPath);
+			texturePacker.savePNG(_exportPath);
 
-			saveXML(exportPath, texturePacker);
+			saveXML(_exportPath, texturePacker);
+			_exportCallback(true);
 		}
 		catch(err:Error){
+			_error = "Error exporting texture named: " + _name + " Error: " + err.message;
+			_exportCallback(false);
 
-			_error = "Error exporting texture named: " + name + " Error: " + err.message;
-			return true;
 		}
-		return false;
+	}
+
+	public function export(exportPath:File, callback:Function = null):void {
+		_exportPath = exportPath;
+		localLoadFromSWF(_file, exportCallback);
+		_exportCallback = callback;
 
 	}
 
@@ -297,6 +296,7 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function set file(value:File):void {
 		_file = value;
+		_fileProxy = new ObjectProxy(_file);
 	}
 
 	public function get fileName():String {
@@ -349,6 +349,22 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function set loadedFromJson(value:Boolean):void {
 		_loadedFromJson = value;
+	}
+
+	public function get textures():Array {
+		return _textures;
+	}
+
+	public function set textures(value:Array):void {
+		_textures = value;
+	}
+
+	public function get symbols():Array {
+		return _symbols;
+	}
+
+	public function set symbols(value:Array):void {
+		_symbols = value;
 	}
 }
 }
