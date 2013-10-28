@@ -2,7 +2,8 @@ xjsfl.init(this);
 clear();
 load('libraries/publishWithJson.jsfl')
 
-publishWithJsonOpenedDocument();
+var folder  = new Folder(fl.browseForFolderURL());
+publishWithJsonOpenedDocument(folder.path);
 
 alert("Completed");
 
