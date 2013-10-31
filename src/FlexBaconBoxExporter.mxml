@@ -29,14 +29,18 @@
 				onClearButton();
 			}
 			else if( event.target.id == "forgetPathButton"){
-//				_rememberExportPath = false;
-				_exportPath = ""
+				onForgetPathButton();
+
 			}
         }
 
 		private function onClearButton():void {
-
 			clearLoadedList();
+		}
+
+		private function onForgetPathButton(){
+			//				_rememberExportPath = false;
+			_exportPath = ""
 		}
 
 
@@ -51,6 +55,22 @@
 
 
         }
+
+		private function keyDown(event:KeyboardEvent):void {
+			if(event.keyCode == 76 ){
+				onLoadButton();
+			}
+			else if(event.keyCode == 69){
+				onExportButton();
+			}
+			else if(event.keyCode == 67){
+				onClearButton();
+			}
+			else if(event.keyCode == 70){
+				onForgetPathButton();
+			}
+		}
+
 
 		private function loadAtlasList(){
 			for each(var path:String in _atlasList) {
@@ -80,6 +100,8 @@
 			for each(var textureAtlas:TextureAtlas  in textureAtlasList.dataProvider) {
 				if(_atlasList.indexOf(textureAtlas.loadFile.nativePath) == -1)_atlasList.push(textureAtlas.loadFile.nativePath);
 			}
+			clearLoadedList();
+			loadAtlasList();
 			exportTextureAtlas(_exportPath)
 		}
 
@@ -156,6 +178,7 @@
                     }
                     var so:SharedObject = SharedObject.getLocal("lastLoadDirectory");
                     so.data.lastLoadDirectory = event.files[0].parent.nativePath;
+					exportButton.setFocus();
                 });
         }
 
@@ -169,10 +192,13 @@
 
         private function creationCompleteHandler(event:FlexEvent):void {
             NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
+			this.addEventListener(KeyboardEvent.KEY_DOWN,keyDown);
+
 			_exportPath = "";
 
 			_rememberExportPath = true;
 			_calledFromConsole = false;
+			loadButton.setFocus();
         }
         ]]>
 
