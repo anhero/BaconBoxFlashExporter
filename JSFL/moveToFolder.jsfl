@@ -2,7 +2,8 @@ xjsfl.init(this);
 clear();
 var library =  Superdoc.containers.panel.library
 
-var folder = $$(':folder:selected').elements[0]
+var folder = $$(':folder:selected').elements[0];
+
 function getMethodsAndAttribute(obj) {
   var result = [];
   for (var id in obj) {
@@ -16,5 +17,6 @@ function getMethodsAndAttribute(obj) {
 }
 $$(':symbol:selected').each(
     function(element, index, elements){
+        if(element.name.indexOf(folder.name+'/') != -1) return;
         library.moveToFolder(folder.name, element.name, false);
     } );

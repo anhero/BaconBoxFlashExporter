@@ -38,6 +38,7 @@ public class TextureAtlas extends EventDispatcher {
 	private var _scale:Number;
 	private var _width:int;
 	private var _height:int;
+	private var _textureFormat:String;
 	private var _loader:Loader = new Loader();
 	private var _appDomain:ApplicationDomain;
 
@@ -58,6 +59,7 @@ public class TextureAtlas extends EventDispatcher {
 		_width = 2048;
 		_height = 2048;
 		_scale = 1;
+		_textureFormat = "RGBA";
         _finishedLoading = false;
 		_loadedFromJson = false;
 	}
@@ -88,7 +90,7 @@ public class TextureAtlas extends EventDispatcher {
 			if(textureAtlasJson.width)textureAtlas.width  = textureAtlasJson.width;
 			if(textureAtlasJson.height)textureAtlas.height  = textureAtlasJson.height;
 			if(textureAtlasJson.scale)textureAtlas.scale  = textureAtlasJson.scale;
-
+			if(textureAtlasJson.textureFormat)textureAtlas.textureFormat  = textureAtlasJson.textureFormat;
 			for each(var key:String in textureAtlasJson["textures"]){
 				textureAtlas.textures.push(key);
 			}
@@ -186,6 +188,7 @@ public class TextureAtlas extends EventDispatcher {
 		textureXML.@name= _name;
 		textureXML.@path= _name + ".png";
 		textureXML.@scale = _scale;
+		textureXML.@textureFormat = this.textureFormat;
 		textureSheetXML.appendChild(textureXML);
 		textureSheetXML.appendChild(symbolsXML);
 
@@ -365,6 +368,26 @@ public class TextureAtlas extends EventDispatcher {
 
 	public function set symbols(value:Array):void {
 		_symbols = value;
+	}
+
+	public function get textureFormat():String {
+		return _textureFormat;
+	}
+
+	public function set textureFormat(value:String):void {
+		if(_loadedFromJson){
+			var fileStream:FileStream = new FileStream();
+			fileStream.open(_loadFile, FileMode.READ);
+			var jsonData:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
+			var jsonObject:Object = JSON.parse(jsonData);
+			var textureAtlasJson:Object = jsonObject.textureAtlas[_name];
+			textureAtlasJson.textureFormat = value;
+			fileStream.close();
+			fileStream.open(_loadFile, FileMode.WRITE);
+			fileStream.writeUTFBytes(JSON.stringify(jsonObject));
+			fileStream.close();
+		}
+		_textureFormat = value;
 	}
 }
 }

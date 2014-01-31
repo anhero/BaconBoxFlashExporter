@@ -4,7 +4,7 @@ load('libraries/publishWithJson.jsfl')
 
 publishWithJsonOpenedDocument();
 
-alert("Completed");
+trace("Completed");
 
 
 /////////////////////////////////////////////////////

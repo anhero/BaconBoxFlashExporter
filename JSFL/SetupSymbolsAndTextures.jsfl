@@ -14,8 +14,12 @@ var getID = Utilities.counter();
 var symbolItems = $$('/*/Symbol/*:movieclip:selected').elements
 var textureItems = $$('/*/Texture/*:movieclip:selected').elements;
 
-Iterators.items(symbolItems, symbolLinkageNameCallback, null, null, elementSymbolConvertCallback);
-Iterators.items(textureItems, textureLinkageNameCallback, null, null, null);
+var scriptInProgress = true;
+while(scriptInProgress){
+    scriptInProgress = false;
+    Iterators.items(symbolItems, symbolLinkageNameCallback, null, null, elementSymbolConvertCallback);
+    Iterators.items(textureItems, textureLinkageNameCallback, null, null, null);
+}
 
 
 Superdoc.selection.select.none();
@@ -27,23 +31,26 @@ alert("Completed");
 
 
 function textureLinkageNameCallback(item, index, items, context){
+    if(! Symbol.isExportedForBaconBox(item)){
         Symbol.linkItem(item, Symbol.getTextureAutoLinkageName());
+    }
 }
 
 function symbolLinkageNameCallback(item, index, items, context){
+    if(! Symbol.isExportedForBaconBox(item)){
         Symbol.linkItem(item, Symbol.getSymbolAutoLinkageName());
+    }
 }
 
 
 
-function elementSymbolConvertCallback(element, index, elements, context)
-{
+function elementSymbolConvertCallback(element, index, elements, context){
     
         if(context.layer.layerType != "normal" || context.item.linkageBaseClass == BaconBox.TextFieldBaseClass) return;
         context.layer.visible =  true;
         context.layer.locked =  false;
          if(element.elementType == "shape" || element.elementType == "instance" && element.libraryItem.itemType == "bitmap") {
-             var currentSymbolName = Symbol.getSymbolName(Symbol.getShortName(context.item.name) + '_');
+             var currentSymbolName = Symbol.getTextureName(Symbol.getShortName(context.item.name) + '_');
              fl.getDocumentDOM().selectNone();
              context.select();
              if(fl.getDocumentDOM().selection.length <= 0) return;
@@ -57,10 +64,10 @@ function elementSymbolConvertCallback(element, index, elements, context)
              //fl.getDocumentDOM().enterEditMode('');
              //fl.getDocumentDOM().distributeToLayers();
              newMc.linkageExportForAS = true;
-             newMc.linkageClassName = currentSymbolName;
+             newMc.linkageClassName = Symbol.getTextureAutoLinkageName();
              newMc.linkageBaseClass = BaconBox.MovieClipBaseClassName;
              newMc.linkageExportInFirstFrame = true;
-             
+             scriptInProgress = true;
          }
     
          else if(element.elementType == "text"){
@@ -83,7 +90,7 @@ function elementSymbolConvertCallback(element, index, elements, context)
              fl.getDocumentDOM().library.moveToFolder(itemName.slice(0, posSymbol)+"Symbol", currentSymbolName); 
 
              newMc.linkageExportForAS = true;
-             newMc.linkageClassName = currentSymbolName;
+             newMc.linkageClassName = Symbol.getSymbolAutoLinkageName();
              newMc.linkageBaseClass = BaconBox.TextFieldBaseClass;
              newMc.linkageExportInFirstFrame = true;
 
@@ -94,7 +101,8 @@ function elementSymbolConvertCallback(element, index, elements, context)
                 }
              }
            
-             
+          scriptInProgress = true;
+
          }
          else{
          }

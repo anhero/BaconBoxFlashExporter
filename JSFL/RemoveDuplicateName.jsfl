@@ -7,13 +7,13 @@ var getID = Utilities.counter();
 var WhatEvID = Utilities.counter();
 
 var nameCache = new Array()
-Iterators.items($$(':symbol').elements, itemLinkageCallback, null, null, null);
+Iterators.items($$(':symbol:selected').elements, itemLinkageCallback, null, null, null);
 
 
-Iterators.items($$(':symbol').elements, removeDuplicateName, null, null, null);
-Iterators.items($$(':symbol').elements, removeDuplicateLinkage, null, null, null);
+Iterators.items($$(':symbol:selected').elements, removeDuplicateName, null, null, null);
+Iterators.items($$(':symbol:selected').elements, removeDuplicateLinkage, null, null, null);
 
-Iterators.items($$(':symbol').elements, itemLinkageCallback, null, null, null);
+Iterators.items($$(':symbol:selected').elements, itemLinkageCallback, null, null, null);
 
 
 alert("done");

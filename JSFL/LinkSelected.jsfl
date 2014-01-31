@@ -16,4 +16,4 @@ function linkageNameCallback(item, index, items, context){
            Symbol.linkItem(item);
 }
 
-alert("Completed");
+// alert("Completed");

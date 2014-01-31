@@ -1,16 +1,22 @@
 load('utilities.jsfl')
 load('BaconBox.jsfl')
-
+load('NameRegister.jsfl')
 Symbol = {
 	getShortName:function(name){
     	return name.substr(name.lastIndexOf('/') + 1);
 	},
 
-	 getSymbolName:function(prefix){
 
+	getSymbolName:function(prefix){
+		return Symbol.getName(prefix, "symbol");
+	},
+	getTextureName:function(prefix){
+		return Symbol.getName(prefix, "texture");
+	},
+	 getName:function(prefix, symbolType){
 	    var name;
 	    do{
-	        name = "symbol" + Symbol.getID();
+	        name = symbolType + Symbol.getID();
 	        if(prefix) name = prefix +name;
 	    }while($$(name).elements.length > 0);
 	    return Utilities.PutToAZ(name);
@@ -28,14 +34,19 @@ Symbol = {
 	},
 
 	getAutoLinkageLinkageName:function(isSymbol){
-		var suffix;
-	    if(isSymbol){
-	        suffix = '_SYMBOL_'+ Symbol.getSymbolLinkID();
-	    }
-	    else{
-	        suffix = '_TEXTURE_'+ Symbol.getTextureLinkID();
-	    }
-	    return Utilities.PutToAZ(Superdoc.file.properties.name.split('.')[0] + suffix).toUpperCase();
+		NameRegister.initialize();
+		var name;
+		do{
+			var suffix;
+		    if(isSymbol){
+		        suffix = '_SYMBOL_'+ Symbol.getSymbolLinkID();
+		    }
+		    else{
+		        suffix = '_TEXTURE_'+ Symbol.getTextureLinkID();
+		    }
+		    name = Utilities.PutToAZ(Superdoc.file.properties.name.split('.')[0] + suffix).toUpperCase();
+		}while(!NameRegister.linkageIsAvailable(name));
+		return name;
 	},
 
 	linkItem: function(item, linkageName, isTextfield){
