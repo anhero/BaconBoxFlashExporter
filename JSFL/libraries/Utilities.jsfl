@@ -44,6 +44,17 @@ Utilities = {
 
 
 
+	},
+
+	MoveElementRefPoint:function(element, diffX,diffY){
+
+		element.x += diffX;
+		element.y += diffY;
+
+		Iterators.layers(element, null, null, function(element, index, elements, context){
+			element.x -= diffX;
+			element.y -= diffY;
+		});
 	}
 }
 
