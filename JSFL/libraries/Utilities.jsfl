@@ -24,25 +24,17 @@ Utilities = {
 		onXAxis = (typeof(onXAxis) !== 'undefined' ? onXAxis: true);
 		onYAxis = (typeof(onYAxis) !== 'undefined' ? onYAxis: true);
 
-
 		var rect = Superdoc.selection.transform.rect;
 
 		var pos = {x:0,y:0};
 		if(onXAxis){
-			var width = (rect.right - rect.left);
-			pos.x = (-0.5 * width) - rect.left;	
+			pos.x = -Superdoc.selection.transform.center.x
 		}
 
 		if(onYAxis){
-			var height = (rect.bottom - rect.top);
-			pos.y = (-0.5 * height) - rect.top;	
-		}
-		clear();
+			pos.y = -Superdoc.selection.transform.center.y
+		}		
 		Superdoc.selection.transform.moveBy(pos);
-
-
-
-
 
 	},
 

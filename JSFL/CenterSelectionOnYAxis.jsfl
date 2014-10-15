@@ -1,4 +1,4 @@
 xjsfl.init(this);
 load('libraries/Utilities.jsfl')
 
-Utilities.CenterSelection();
+Utilities.CenterSelection(false,true);
