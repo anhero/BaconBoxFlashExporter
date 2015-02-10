@@ -36,7 +36,7 @@ function getMethods(obj) {
 function elementCB(element, index, elements, context){
     if(element.name == instanceName) {
       
-        trace(context.item.shortName  + " -- " + element.libraryItem.shortName);
-        if(elementList.indexOf(element.libraryItem.shortName) == -1)elementList.push(element.libraryItem.shortName);
+        trace(context.item.name  + " -- " + element.libraryItem.name);
+        if(elementList.indexOf(element.libraryItem.name) == -1)elementList.push(element.libraryItem.name);
     }
 }
