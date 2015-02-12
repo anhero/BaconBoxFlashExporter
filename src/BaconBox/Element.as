@@ -136,6 +136,20 @@ public class Element {
 		}
 		else{
 			var mc:MovieClip = symbol as MovieClip;
+			var mcType:String = getQualifiedSuperclassName(classDef).split("::")[1];
+			// If ever we want to export the linkage class.
+			// We could even get the fully qualified linkage class by not splitting to ::
+			// xml.@linkage = mcType
+			// If ever we need to be pedantic and specify false
+			// xml.@autoPlay = false
+
+			// When movieclip is linked as MovieClipAuto we want to autoplay
+			// This string type checking /will/ break if we make another linkage type that
+			// inherits from EntityHolderMovieClipAuto. We will need to actually import the linkage
+			// classes in the exporter instead of working with strings to check with the "is" operator.
+			if (mcType == "EntityHolderMovieClipAuto") {
+				xml.@autoPlay = true
+			}
 				xml.@frameCount = mc.totalFrames;
 				if(mc){
 					var labels:Array = mc.currentLabels;
